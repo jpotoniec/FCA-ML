@@ -6,7 +6,10 @@ package put.semantic.fca;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import put.semantic.putapi.Individual;
 import put.semantic.putapi.Reasoner;
@@ -17,17 +20,33 @@ import put.semantic.putapi.Reasoner;
  */
 public class PartialContext {
 
-    private Set<POD> pods = new HashSet<>();
     private Collection<Attribute> premises;
     private Set<Attribute> notRefuted = new HashSet<>();
 
+    private POD getPOD(Map<String, POD> pods, String key) {
+        POD p = pods.get(key);
+        if (p == null) {
+            p = new POD();
+            pods.put(key, p);
+        }
+        return p;
+    }
+
     public PartialContext(Reasoner kb, Collection<Attribute> attributes, Collection<Attribute> allAttributes) {
         this.premises = attributes;
-        for (Individual i : kb.getIndividuals()) {
-            pods.add(new POD(kb, i, allAttributes));
+        Map<String, POD> pods = new HashMap<>();
+        for (Attribute a : allAttributes) {
+            List<String> examples = a.getExamples();
+            for (String ex : examples) {
+                getPOD(pods, ex).addPositive(a);
+            }
+            List<String> counterexamples = a.getCounterexamples();
+            for (String ex : counterexamples) {
+                getPOD(pods, ex).addNegative(a);
+            }
         }
         notRefuted.addAll(allAttributes);
-        for (POD pod : pods) {
+        for (POD pod : pods.values()) {
             if (pod.getPositive().containsAll(attributes)) {
                 notRefuted.removeAll(pod.getNegative());
             }
@@ -35,21 +54,17 @@ public class PartialContext {
         notRefuted.removeAll(attributes);
     }
 
-    public Set<POD> getDescriptions() {
-        return Collections.unmodifiableSet(pods);
-    }
-
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof PartialContext)) {
             return false;
         }
-        return pods.equals(((PartialContext) obj).pods);
+        return notRefuted.equals(((PartialContext) obj).notRefuted);
     }
 
     @Override
     public int hashCode() {
-        return pods.hashCode();
+        return notRefuted.hashCode();
     }
 
     public Set<Attribute> getNotRefuted() {
