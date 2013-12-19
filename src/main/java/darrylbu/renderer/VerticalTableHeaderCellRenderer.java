@@ -35,7 +35,7 @@ public class VerticalTableHeaderCellRenderer
     setHorizontalTextPosition(CENTER);
     setVerticalAlignment(CENTER);
     setVerticalTextPosition(TOP);
-    setUI(new VerticalLabelUI(true));
+    setUI(new VerticalLabelUI());
   }
 
   /**

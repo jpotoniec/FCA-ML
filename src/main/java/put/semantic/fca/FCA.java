@@ -1,10 +1,13 @@
 package put.semantic.fca;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.BoxLayout;
@@ -70,32 +73,7 @@ public class FCA {
     }
 
     private String ask(Implication i) {
-        JPanel panel = new JPanel();
-        BoxLayout layout = new BoxLayout(panel, BoxLayout.PAGE_AXIS);
-        panel.setLayout(layout);
-        String text = "<html><body width=\"500px\">";
-        text += "<b>Premises:</b><p>";
-        for (Attribute a : i.getPremises()) {
-            text += a.toString() + " ";
-        }
-        text += "</p>";
-        text += "<b>Conclusions:</b><p>";
-        for (Attribute a : i.getConclusions()) {
-            text += a.toString() + " ";
-        }
-        text += "</p>";
-        text += "</body></html>";
-        panel.add(new JLabel(text));
-        JTextArea textarea = new JTextArea();
-        textarea.setRows(10);
-        panel.add(new JScrollPane(textarea));
-        int result = JOptionPane.showConfirmDialog(null, panel,
-                "Is following implication correct? If not, enter counterexample if possible.", JOptionPane.YES_NO_OPTION);
-        if (result == JOptionPane.NO_OPTION) {
-            return textarea.getText();
-        } else {
-            return null;
-        }
+        return cw.ask(i);
     }
 
     private void compute(Reasoner kb, List<Attribute> allAttributes) {
@@ -159,6 +137,7 @@ public class FCA {
     private static final String RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns# ";
     private static final String ENDPOINT = "http://localhost:8080/openrdf-sesame/repositories/lubm";
     private Context context;
+    private ContextWindow cw;
 
     private void updateContext() {
         context.update();
@@ -197,13 +176,19 @@ public class FCA {
         }
 
         this.context = new Context(allAttributes, kb);
-
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                ContextWindow cw = new ContextWindow(context);
-                cw.setVisible(true);
+        for (;;) {
+            try {
+                java.awt.EventQueue.invokeAndWait(new Runnable() {
+                    public void run() {
+                        cw = new ContextWindow(context);
+                        cw.setVisible(true);
+                    }
+                });
+                break;
+            } catch (InterruptedException | InvocationTargetException ex) {
+                Logger.getLogger(FCA.class.getName()).log(Level.SEVERE, null, ex);
             }
-        });
+        }
 
 //        allAttributes.add(new ClassAttribute(kb, person));
 //        allAttributes.add(new ClassAttribute(kb, graduateStudent));
