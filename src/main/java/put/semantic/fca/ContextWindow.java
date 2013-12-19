@@ -218,6 +218,7 @@ public class ContextWindow extends javax.swing.JFrame {
         }
         setUIState(false);
     }//GEN-LAST:event_declineActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton accept;
     private javax.swing.JTable contextView;

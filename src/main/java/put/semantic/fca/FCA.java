@@ -1,5 +1,7 @@
 package put.semantic.fca;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -116,7 +118,7 @@ public class FCA {
                             String[] axioms = answer.split("\\s+");
                             for (String axiom : axioms) {
                                 try {
-                                    parseAxiom(kb, axiom);
+                                    parseAxiom(kb, axiom, i);
                                 } catch (Exception ex) {
                                     System.err.println(axiom);
                                     System.err.println(ex);
@@ -164,7 +166,7 @@ public class FCA {
             if (uri != null && !uri.startsWith(OWL) && !uri.startsWith(RDF)) {
 //                allAttributes.add(new DomainAttribute(kb, ENDPOINT, property, uri));
                 allAttributes.add(new ClassAttribute(kb, uri, ENDPOINT));
-//                allAttributes.add(new NotClassAttribute(kb, uri));
+                allAttributes.add(new NotClassAttribute(kb, uri, ENDPOINT));
             }
         }
         List<OntObjectProperty> properties = kb.getObjectProperties();
@@ -189,50 +191,27 @@ public class FCA {
                 Logger.getLogger(FCA.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-
-//        allAttributes.add(new ClassAttribute(kb, person));
-//        allAttributes.add(new ClassAttribute(kb, graduateStudent));
-//        allAttributes.add(new ClassAttribute(kb, student));
-//        allAttributes.add(new ClassAttribute(kb, ta));
-//        allAttributes.add(new ClassAttribute(kb, undergraduateStudent));
-//        allAttributes.add(new ClassAttribute(kb, chair));
-//        allAttributes.add(new NotClassAttribute(kb, person));
-//        allAttributes.add(new NotClassAttribute(kb, graduateStudent));
-//        allAttributes.add(new NotClassAttribute(kb, student));
-//        allAttributes.add(new NotClassAttribute(kb, ta));
-//        allAttributes.add(new NotClassAttribute(kb, undergraduateStudent));
-//        allAttributes.add(new NotClassAttribute(kb, chair));
-//        allAttributes.add(new DisjointnessAttribute(kb, graduateStudent, ta));
-//        allAttributes.add(new DisjointnessAttribute(kb, graduateStudent, student));
-//        allAttributes.add(new DisjointnessAttribute(kb, student, person));
-//        allAttributes.add(new DisjointnessAttribute(kb, graduateStudent, undergraduateStudent));
-//        allAttributes.add(new DisjointnessAttribute(kb, chair, undergraduateStudent));
-//        allAttributes.add(new DisjointnessAttribute(kb, graduateStudent, chair));
         compute(kb, allAttributes);
-//        allAttributes.add(new DomainAttribute(kb, property, thing));
-//        allAttributes.add(new DomainAttribute(kb, property, person));
-//        allAttributes.add(new DomainAttribute(kb, property, graduateStudent));
-//        allAttributes.add(new DomainAttribute(kb, property, student));
-//        allAttributes.add(new DomainAttribute(kb, property, ta));
-//        PartialContext pc = new PartialContext(kb, allAttributes.subList(0, 1), allAttributes);
-//        System.out.println(pc);
-//        for (POD pod : pc.getDescriptions()) {
-//            System.err.println(pod);
-//        }
-//        for (Attribute a : pc.getNotRefuted()) {
-//            System.err.println(a.getHumanDescription());
-//        }
+        try { 
+            ((PelletReasoner) kb).getModel().write(new FileOutputStream("/tmp/fca.owl"));
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(FCA.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public static void main(String[] args) {
         new FCA().xmain(args);
     }
 
-    private void parseAxiom(Reasoner kb, String axiom) {
+    private void parseAxiom(Reasoner kb, String axiom, Implication impl) {
         if (axiom == null || axiom.isEmpty()) {
             return;
         }
         System.out.println(axiom);
+        if ("stupid".equals(axiom)) {
+            updateKB(kb, impl.getPremisesClass(kb), kb.getClass(Vocabulary.Nothing));
+            return;
+        }
         boolean complement = false;
         if (axiom.charAt(0) == '!') {
             complement = true;
@@ -296,4 +275,6 @@ public class FCA {
 !http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#Student(http://www.Department0.University0.edu/Lecturer5)
 !http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#Chair(http://www.Department0.University0.edu/Lecturer5)
  
+ !http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#Publication(http://www.Department0.University0.edu/ResearchGroup1)
+ * 
  */
