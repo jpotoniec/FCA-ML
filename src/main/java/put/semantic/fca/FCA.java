@@ -17,6 +17,7 @@ import org.apache.commons.lang.StringUtils;
 import put.semantic.putapi.Descriptor;
 import put.semantic.putapi.IntersectionClass;
 import put.semantic.putapi.OntClass;
+import put.semantic.putapi.OntObjectProperty;
 import put.semantic.putapi.Reasoner;
 import put.semantic.putapi.Vocabulary;
 import put.semantic.putapi.impl.pellet.PelletClass;
@@ -101,6 +102,7 @@ public class FCA {
         Set<Attribute> p = new HashSet<>();
         Set<Implication> l = new HashSet<>();
         while (!p.containsAll(allAttributes)) {
+            updateContext();
             System.out.println("P set: " + StringUtils.join(p, " "));
             System.out.println("L set: " + StringUtils.join(l, " "));
             PartialContext pc = new PartialContext(kb, p, allAttributes);
@@ -135,7 +137,12 @@ public class FCA {
                             System.out.println("Extending ABox");
                             String[] axioms = answer.split("\\s+");
                             for (String axiom : axioms) {
-                                parseAxiom(kb, axiom);
+                                try {
+                                    parseAxiom(kb, axiom);
+                                } catch (Exception ex) {
+                                    System.err.println(axiom);
+                                    System.err.println(ex);
+                                }
                             }
                             break;
                         }
@@ -151,14 +158,19 @@ public class FCA {
     private static final String OWL = "http://www.w3.org/2002/07/owl#";
     private static final String RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns# ";
     private static final String ENDPOINT = "http://localhost:8080/openrdf-sesame/repositories/lubm";
+    private Context context;
+
+    private void updateContext() {
+        context.update();
+    }
 
     public void xmain(String[] args) {
-        Reasoner kb = new PelletReasoner();
+        final Reasoner kb = new PelletReasoner();
         kb.loadFile("/home/smaug/praca/Asparagus/Main/data/univ-bench.owl");
 
 //        kb.loadFile("/home/smaug/praca/Asparagus/Main/data/University0_0.owl");
-        List<Attribute> allAttributes = new ArrayList<>();
-//        String property = "http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#takesCourse";
+        final List<Attribute> allAttributes = new ArrayList<>();
+        String property = "http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#takesCourse";
 //        String thing = Vocabulary.Thing;
 //        String person = "http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#Person";
 //        String graduateStudent = "http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#GraduateStudent";
@@ -166,14 +178,33 @@ public class FCA {
 //        String student = "http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#Student";
 //        String ta = "http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#TeachingAssistant";
 //        String chair = "http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#Chair";
+
         List<OntClass> classes = kb.getClasses();
         for (OntClass c : classes) {
             String uri = c.getURI();
             if (uri != null && !uri.startsWith(OWL) && !uri.startsWith(RDF)) {
+//                allAttributes.add(new DomainAttribute(kb, ENDPOINT, property, uri));
                 allAttributes.add(new ClassAttribute(kb, uri, ENDPOINT));
 //                allAttributes.add(new NotClassAttribute(kb, uri));
             }
         }
+        List<OntObjectProperty> properties = kb.getObjectProperties();
+        for (OntObjectProperty p : properties) {
+            String uri = p.getURI();
+            if (uri != null && !uri.startsWith(OWL) && !uri.startsWith(RDF)) {
+                allAttributes.add(new PropertyAttribute(kb, ENDPOINT, uri));
+            }
+        }
+
+        this.context = new Context(allAttributes, kb);
+
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                ContextWindow cw = new ContextWindow(context);
+                cw.setVisible(true);
+            }
+        });
+
 //        allAttributes.add(new ClassAttribute(kb, person));
 //        allAttributes.add(new ClassAttribute(kb, graduateStudent));
 //        allAttributes.add(new ClassAttribute(kb, student));
@@ -232,7 +263,7 @@ public class FCA {
             if (complement) {
                 clazz = kb.createComplementClass(null, clazz);
             }
-            fetchIndividual(kb, indURI);            
+            fetchIndividual(kb, indURI);
             kb.createIndividual(indURI, new OntClass[]{clazz});
         }
         p = Pattern.compile("^(.*)\\^(.*)$");
@@ -250,11 +281,12 @@ public class FCA {
         String c = Descriptor.INSTANCE.describe(conclusions);
         System.out.printf("%s -> %s\n", p, c);
         ((PelletClass) conclusions).addSubclass(premises);
+        //TODO: chyba należy dodawać do KB dowolny przykład popierający tę implikację
     }
 
-    private void fetchIndividual(Reasoner kb, String uri) {        
+    private void fetchIndividual(Reasoner kb, String uri) {
         //construct {<http://www.Department0.University0.edu/FullProfessor7> a ?type} where {<http://www.Department0.University0.edu/FullProfessor7> a ?type. filter(isuri(?type))}
-        kb.construct(ENDPOINT, String.format("construct {<%1$s> a ?type} where {<%1$s> a ?type. filter(isuri(?type))}", uri));        
+        kb.construct(ENDPOINT, String.format("construct {<%1$s> a ?type} where {<%1$s> a ?type. filter(isuri(?type))}", uri));
 //        kb.construct(ENDPOINT, String.format("construct {<%1$s> ?p []} where {<%1$s> ?p []}", uri));        
 //        kb.construct(ENDPOINT, String.format("construct {[] ?p <%1$s>} where {[] ?p <%1$s>}", uri));
     }
@@ -278,5 +310,5 @@ public class FCA {
  * 
 !http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#Student(http://www.Department0.University0.edu/Lecturer5)
 !http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#Chair(http://www.Department0.University0.edu/Lecturer5)
-!http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#TeachingAssistant(http://www.Department0.University0.edu/Lecturer5)
+ 
  */

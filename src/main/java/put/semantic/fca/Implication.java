@@ -39,7 +39,7 @@ public class Implication {
     private static OntClass getClass(Reasoner kb, Set<Attribute> set) {
         List<OntClass> operands = new ArrayList<>();
         for (Attribute a : set) {
-            operands.add(a.getOntClass(kb));
+            operands.add(a.getOntClass());
         }
         if (operands.isEmpty()) {
             return kb.getClass(Vocabulary.Thing);
