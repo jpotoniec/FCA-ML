@@ -5,21 +5,36 @@
  */
 package put.semantic.fcanew.ui;
 
+import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.ontology.Individual;
+import com.hp.hpl.jena.ontology.IntersectionClass;
 import com.hp.hpl.jena.ontology.OntClass;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.RDFList;
+import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.rdf.model.StmtIterator;
+import com.hp.hpl.jena.rdf.model.impl.RDFListImpl;
 import com.hp.hpl.jena.util.iterator.ExtendedIterator;
+import com.hp.hpl.jena.vocabulary.OWL2;
+import com.hp.hpl.jena.vocabulary.RDFS;
+import darrylbu.renderer.VerticalTableHeaderCellRenderer;
 import java.awt.EventQueue;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.DefaultCellEditor;
+import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableColumn;
 import put.semantic.fcanew.Attribute;
 import put.semantic.fcanew.Expert;
 import put.semantic.fcanew.FCA;
@@ -28,6 +43,7 @@ import put.semantic.fcanew.POD;
 import put.semantic.fcanew.PartialContext;
 import put.semantic.fcanew.SetOfAttributes;
 import put.semantic.fcanew.SimpleSetOfAttributes;
+import put.semantic.fcanew.SubsetOfAttributes;
 
 /**
  *
@@ -51,14 +67,16 @@ public class MainWindow extends javax.swing.JFrame {
             attributes.add(new ClassAttribute(clazz, model));
         }
         return attributes;
-    }    
+    }
 
     private class GuiExpert implements Expert {
 
         private final Decision[] dec = new Decision[1];
+        private Implication currentImplication;
 
         @Override
         public Decision verify(Implication impl) {
+            this.currentImplication = impl;
             ask(impl);
             while (true) {
                 try {
@@ -71,11 +89,6 @@ public class MainWindow extends javax.swing.JFrame {
                     Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-        }
-
-        @Override
-        public POD getCounterexample() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
         private void accept() {
@@ -94,27 +107,25 @@ public class MainWindow extends javax.swing.JFrame {
 
         private void ask(final Implication impl) {
             EventQueue.invokeLater(new Runnable() {
-
                 @Override
                 public void run() {
                     implicationText.setText(impl.toString());
                 }
             });
         }
-
     }
-
     private GuiExpert guiExpert = new GuiExpert();
+    private OntModel model;
 
     /**
      * Creates new form MainWindow
      */
     public MainWindow() {
         initComponents();
-        OntModel model = ModelFactory.createOntologyModel();
+        model = ModelFactory.createOntologyModel();
         try {
-            model.read(new File("/home/smaug/praca/Asparagus/Main/data/univ-bench.owl").toURI().toURL().toString());
-            model.read(new File("/home/smaug/praca/Asparagus/Main/data/University0_0.owl").toURI().toURL().toString());
+            model.read(new File("/home/smaug/studia/Asparagus/Main/data/univ-bench.owl").toURI().toURL().toString());
+            model.read(new File("/home/smaug/studia/Asparagus/Main/data/University0_0.owl").toURI().toURL().toString());
         } catch (MalformedURLException ex) {
             Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -123,15 +134,28 @@ public class MainWindow extends javax.swing.JFrame {
         while (i.hasNext()) {
             Individual ind = i.next();
             if (ind.isURIResource()) {
-                context.addPOD(new KBPod(ind, context.getAttributes()));
+                POD pod = new POD(ind, context.getAttributes());
+                for (Attribute a : context.getAttributes()) {
+                    ClassAttribute attr = (ClassAttribute) a;
+                    if (ind.hasOntClass(attr.getOntClass())) {
+                        pod.getPositive().add(attr);
+                    } else if (ind.hasOntClass(attr.getComplement())) {
+                        pod.getNegative().add(attr);
+                    }
+                }
+                context.addPOD(pod);
             }
         }
         contextTable.setModel(new ContextDataModel(context));
+        Enumeration<TableColumn> e = contextTable.getColumnModel().getColumns();
+        while (e.hasMoreElements()) {
+            e.nextElement().setHeaderRenderer(new VerticalTableHeaderCellRenderer());
+        }
+//        contextTable.setCellEditor(new DefaultCellEditor(new JComboBox(new Object[]{"+", "-", " "})));
         final FCA fca = new FCA();
         fca.setContext(context);
         fca.setExpert(guiExpert);
         new SwingWorker() {
-
             @Override
             protected Object doInBackground() throws Exception {
                 fca.reset();
@@ -253,7 +277,7 @@ public class MainWindow extends javax.swing.JFrame {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -280,7 +304,6 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
     }
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton acceptButton;
     private javax.swing.JTable contextTable;

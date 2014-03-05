@@ -24,6 +24,11 @@ public class SubsetOfAttributes implements Iterable<Attribute> {
         this.indexes = new TreeSet<>();
     }
 
+    protected SubsetOfAttributes(SetOfAttributes base, NavigableSet<Integer> indexes) {
+        this.base = base;
+        this.indexes = new TreeSet<>(indexes);
+    }
+
     public SubsetOfAttributes(SubsetOfAttributes orig) {
         this.base = orig.base;
         this.indexes = new TreeSet<>(orig.indexes);
@@ -37,7 +42,6 @@ public class SubsetOfAttributes implements Iterable<Attribute> {
     @Override
     public Iterator<Attribute> iterator() {
         return new Iterator<Attribute>() {
-
             private Iterator<Integer> i = indexes.iterator();
 
             @Override
@@ -92,9 +96,7 @@ public class SubsetOfAttributes implements Iterable<Attribute> {
     }
 
     public SubsetOfAttributes getSubset(int max) {
-        SubsetOfAttributes result = new SubsetOfAttributes(this);
-        result.indexes = result.indexes.headSet(max, true);
-        return result;
+        return new SubsetOfAttributes(base, indexes.headSet(max, true));
     }
 
     public void add(int j) {
@@ -136,4 +138,11 @@ public class SubsetOfAttributes implements Iterable<Attribute> {
         }
     }
 
+    public void clear() {
+        this.indexes.clear();
+    }
+
+    public void remove(Attribute a) {
+        indexes.remove(base.indexOf(a));
+    }
 }

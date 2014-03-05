@@ -5,6 +5,7 @@
  */
 package put.semantic.fcanew;
 
+import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -18,6 +19,11 @@ public class FCA {
     protected SubsetOfAttributes p;
     protected SetOfImplications implications;
     protected Implication current;
+    protected Iterable<? extends Implication> bk;
+
+    public void setBackgroundKnowledge(Iterable<? extends Implication> bk) {
+        this.bk = bk;
+    }
 
     public void setContext(PartialContext context) {
         this.context = context;
@@ -42,6 +48,11 @@ public class FCA {
     public void reset() {
         p = new SubsetOfAttributes(context.getAttributes());
         implications = new SetOfImplications();
+        if (bk != null) {
+            for (Implication i : bk) {
+                implications.add(i);
+            }
+        }
     }
 
     protected void processCurrentImplication() {
@@ -49,6 +60,7 @@ public class FCA {
         switch (decision) {
             case ACCEPT:
                 accept();
+                p = getNext(p);
                 break;
             case REJECT:
                 reject();
@@ -65,13 +77,12 @@ public class FCA {
             if (!current.isTrivial()) {
                 processCurrentImplication();
             }
-            p = getNext(p);
         }
     }
 
     protected void accept() {
         implications.add(current);
-        //TODO: update context w.r.t. implications
+        context.update(current);
     }
 
     protected void reject() {

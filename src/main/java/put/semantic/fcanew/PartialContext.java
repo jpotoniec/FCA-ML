@@ -7,6 +7,7 @@ package put.semantic.fcanew;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EventListener;
 import java.util.List;
 
 /**
@@ -15,8 +16,20 @@ import java.util.List;
  */
 public class PartialContext {
 
+    public static interface ContextChangedListener extends EventListener {
+
+        public void contextChanged(PartialContext context);
+    }
     private List<POD> pods;
     private SetOfAttributes attributes;
+    private List<ContextChangedListener> contextChangedListeners = new ArrayList<>();
+    private boolean contextChanged = false;
+    private POD.PODChangedListener changeListener = new POD.PODChangedListener() {
+        @Override
+        public void podChanged(POD pod) {
+            contextChanged = true;
+        }
+    };
 
     public PartialContext(SetOfAttributes attributes) {
         this.pods = new ArrayList<>();
@@ -42,7 +55,33 @@ public class PartialContext {
         return m;
     }
 
+    public void addContextChangedListener(ContextChangedListener listener) {
+        if (listener != null) {
+            contextChangedListeners.add(listener);
+        }
+    }
+
+    public void removeContextChangedListener(ContextChangedListener listener) {
+        contextChangedListeners.remove(listener);
+    }
+
+    protected void fireContextChanged() {
+        for (ContextChangedListener listener : contextChangedListeners) {
+            listener.contextChanged(this);
+        }
+    }
+
     public void addPOD(POD example) {
         pods.add(example);
+        example.addPODChangedListener(changeListener);
+    }
+
+    public void update(Implication implication) {
+        for (POD p : pods) {
+            if (p.getPositive().containsAll(implication.getPremises())) {
+                p.getPositive().addAll(implication.getConclusions());
+            }
+        }
+        fireContextChanged();
     }
 }

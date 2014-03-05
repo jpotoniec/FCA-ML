@@ -14,12 +14,13 @@ import put.semantic.fcanew.PartialContext;
  *
  * @author smaug
  */
-public class ContextDataModel extends AbstractTableModel {
+public class ContextDataModel extends AbstractTableModel implements PartialContext.ContextChangedListener {
 
     private PartialContext context;
 
     public ContextDataModel(PartialContext context) {
         this.context = context;
+        this.context.addContextChangedListener(this);
     }
 
     @Override
@@ -36,7 +37,7 @@ public class ContextDataModel extends AbstractTableModel {
     public Object getValueAt(int rowIndex, int columnIndex) {
         POD pod = context.getPODs().get(rowIndex);
         if (columnIndex == 0) {
-            return ((KBPod) pod).getIndividual().getLocalName();
+            return pod.getId().getLocalName();
         }
         Attribute a = context.getAttributes().get(columnIndex - 1);
         if (pod.getPositive().contains(a)) {
@@ -54,5 +55,39 @@ public class ContextDataModel extends AbstractTableModel {
             return "Individual";
         }
         return context.getAttributes().get(column - 1).toString();
+    }
+
+    @Override
+    public void contextChanged(PartialContext context) {
+        fireTableDataChanged();
+    }
+
+    @Override
+    public boolean isCellEditable(int rowIndex, int columnIndex) {
+        return columnIndex > 0;
+    }
+
+    @Override
+    public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+        if (columnIndex == 0) {
+            throw new IllegalArgumentException();
+        }
+        POD pod = context.getPODs().get(rowIndex);
+        Attribute a = context.getAttributes().get(columnIndex - 1);
+        System.out.printf("'%s'\n", aValue.toString());
+        switch (aValue.toString()) {
+            case "+":
+                pod.getNegative().remove(a);
+                pod.getPositive().add(a);
+                break;
+            case "-":
+                pod.getPositive().remove(a);
+                pod.getNegative().add(a);
+                break;
+            default:
+                pod.getPositive().remove(a);
+                pod.getNegative().remove(a);
+                break;
+        }
     }
 }
