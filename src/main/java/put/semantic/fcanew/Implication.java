@@ -19,11 +19,11 @@ public class Implication {
         conclusions.removeAll(premises);
     }
 
-    public SubsetOfAttributes getPremises() {
+    public ReadOnlySubsetOfAttributes getPremises() {
         return premises;
     }
 
-    public SubsetOfAttributes getConclusions() {
+    public ReadOnlySubsetOfAttributes getConclusions() {
         return conclusions;
     }
 

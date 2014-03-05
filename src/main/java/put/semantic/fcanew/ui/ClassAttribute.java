@@ -5,8 +5,8 @@
  */
 package put.semantic.fcanew.ui;
 
-import com.hp.hpl.jena.ontology.OntClass;
-import com.hp.hpl.jena.ontology.OntModel;
+import org.semanticweb.owlapi.model.OWLClassExpression;
+import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import put.semantic.fcanew.Attribute;
 
 /**
@@ -15,24 +15,29 @@ import put.semantic.fcanew.Attribute;
  */
 public class ClassAttribute implements Attribute {
 
-    private OntClass clazz, complement;
+    private OWLClassExpression clazz, complement;
 
-    public ClassAttribute(OntClass clazz, OntModel model) {
+    public ClassAttribute(OWLClassExpression clazz, OWLReasoner reasoner) {
         this.clazz = clazz;
-        this.complement = model.createComplementClass(null, clazz);
+//        getReasoner().getInstances(getFactory().getOWLObjectComplementOf(attribute), false).getFlattened()
+//        this.complement = clazz.getObjectComplementOf();
+        this.complement = reasoner.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLObjectComplementOf(clazz);
     }
 
-    public OntClass getOntClass() {
+    public OWLClassExpression getOntClass() {
         return clazz;
     }
 
-    public OntClass getComplement() {
+    public OWLClassExpression getComplement() {
         return complement;
     }
 
     @Override
     public String toString() {
-        return clazz.getLocalName();
+        if (!clazz.isAnonymous()) {
+            return clazz.asOWLClass().getIRI().getFragment();
+        } else {
+            return clazz.toString();
+        }
     }
-
 }

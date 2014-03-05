@@ -5,43 +5,35 @@
  */
 package put.semantic.fcanew.ui;
 
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.ontology.Individual;
-import com.hp.hpl.jena.ontology.IntersectionClass;
-import com.hp.hpl.jena.ontology.OntClass;
-import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.RDFList;
-import com.hp.hpl.jena.rdf.model.RDFNode;
-import com.hp.hpl.jena.rdf.model.Statement;
-import com.hp.hpl.jena.rdf.model.StmtIterator;
-import com.hp.hpl.jena.rdf.model.impl.RDFListImpl;
-import com.hp.hpl.jena.util.iterator.ExtendedIterator;
-import com.hp.hpl.jena.vocabulary.OWL2;
-import com.hp.hpl.jena.vocabulary.RDFS;
 import darrylbu.renderer.VerticalTableHeaderCellRenderer;
 import java.awt.EventQueue;
-import java.io.File;
-import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.DefaultCellEditor;
-import javax.swing.JComboBox;
-import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
-import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
+import org.semanticweb.HermiT.Reasoner;
+import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.OWLClass;
+import org.semanticweb.owlapi.model.OWLNamedIndividual;
+import org.semanticweb.owlapi.model.OWLOntology;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
+import org.semanticweb.owlapi.model.OWLOntologyManager;
+import org.semanticweb.owlapi.reasoner.InferenceType;
+import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import put.semantic.fcanew.Attribute;
 import put.semantic.fcanew.Expert;
 import put.semantic.fcanew.FCA;
 import put.semantic.fcanew.Implication;
 import put.semantic.fcanew.POD;
 import put.semantic.fcanew.PartialContext;
-import put.semantic.fcanew.SetOfAttributes;
 import put.semantic.fcanew.SimpleSetOfAttributes;
 import put.semantic.fcanew.SubsetOfAttributes;
 
@@ -53,18 +45,13 @@ public class MainWindow extends javax.swing.JFrame {
 
     private PartialContext context;
 
-    private List<Attribute> createAttributes(OntModel model) {
+    private List<Attribute> createAttributes() {
         List<Attribute> attributes = new ArrayList<>();
-        List<OntClass> namedClasses = new ArrayList<>();
-        ExtendedIterator<OntClass> i = model.listClasses();
-        while (i.hasNext()) {
-            OntClass clazz = i.next();
-            if (clazz.listInstances().hasNext() && clazz.isURIResource()) {
-                namedClasses.add(clazz);
+        Set<OWLClass> namedClasses = model.getRootOntology().getClassesInSignature(true);
+        for (OWLClass clazz : namedClasses) {
+            if (!model.getInstances(clazz, false).isEmpty()) {
+                attributes.add(new ClassAttribute(clazz, model));
             }
-        }
-        for (OntClass clazz : namedClasses) {
-            attributes.add(new ClassAttribute(clazz, model));
         }
         return attributes;
     }
@@ -109,43 +96,62 @@ public class MainWindow extends javax.swing.JFrame {
             EventQueue.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    implicationText.setText(impl.toString());
+                    implicationText.setText("<html>" + impl.toString() + "</html>");
                 }
             });
         }
     }
     private GuiExpert guiExpert = new GuiExpert();
-    private OntModel model;
+    private OWLReasoner model;
+
+    private void initContext() {
+        model.precomputeInferences(InferenceType.CLASS_ASSERTIONS, InferenceType.CLASS_HIERARCHY);
+        Map<OWLNamedIndividual, SubsetOfAttributes> p = new HashMap<>();
+        Map<OWLNamedIndividual, SubsetOfAttributes> n = new HashMap<>();
+        Set<OWLNamedIndividual> individuals = model.getRootOntology().getIndividualsInSignature(true);
+        for (OWLNamedIndividual i : individuals) {
+            p.put(i, new SubsetOfAttributes(context.getAttributes()));
+            n.put(i, new SubsetOfAttributes(context.getAttributes()));
+        }
+        for (int x = 0; x < context.getAttributes().size(); ++x) {
+            System.err.printf("Attribute %d/%d\n", x + 1, context.getAttributes().size());
+            ClassAttribute attr = (ClassAttribute) context.getAttributes().get(x);
+            Set<OWLNamedIndividual> instances;
+            instances = model.getInstances(attr.getOntClass(), false).getFlattened();
+            for (OWLNamedIndividual i : instances) {
+                SubsetOfAttributes attrs = p.get(i);
+                if (attrs != null) {
+                    attrs.add(x);
+                }
+            }
+            instances = model.getInstances(attr.getComplement(), false).getFlattened();
+            for (OWLNamedIndividual i : instances) {
+                SubsetOfAttributes attrs = n.get(i);
+                if (attrs != null) {
+                    attrs.add(x);
+                }
+            }
+        }
+        for (OWLNamedIndividual i : p.keySet()) {
+            POD pod = new POD(i, context.getAttributes(), model, p.get(i), n.get(i));
+            context.addPOD(pod);
+        }
+    }
 
     /**
      * Creates new form MainWindow
      */
-    public MainWindow() {
+    public MainWindow() throws OWLOntologyCreationException {
         initComponents();
-        model = ModelFactory.createOntologyModel();
-        try {
-            model.read(new File("/home/smaug/studia/Asparagus/Main/data/univ-bench.owl").toURI().toURL().toString());
-            model.read(new File("/home/smaug/studia/Asparagus/Main/data/University0_0.owl").toURI().toURL().toString());
-        } catch (MalformedURLException ex) {
-            Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        context = new PartialContext(new SimpleSetOfAttributes(createAttributes(model)));
-        ExtendedIterator<Individual> i = model.listIndividuals();
-        while (i.hasNext()) {
-            Individual ind = i.next();
-            if (ind.isURIResource()) {
-                POD pod = new POD(ind, context.getAttributes());
-                for (Attribute a : context.getAttributes()) {
-                    ClassAttribute attr = (ClassAttribute) a;
-                    if (ind.hasOntClass(attr.getOntClass())) {
-                        pod.getPositive().add(attr);
-                    } else if (ind.hasOntClass(attr.getComplement())) {
-                        pod.getNegative().add(attr);
-                    }
-                }
-                context.addPOD(pod);
-            }
-        }
+        OWLOntologyManager m = OWLManager.createOWLOntologyManager();
+        HashSet<OWLOntology> ontologies = new HashSet<>();
+        ontologies.add(m.loadOntologyFromOntologyDocument(IRI.create("file:///home/smaug/studia/Asparagus/Main/data/University0_0.owl")));
+        ontologies.add(m.loadOntologyFromOntologyDocument(IRI.create("file:///home/smaug/studia/Asparagus/Main/data/univ-bench.owl")));
+        OWLOntology o = m.createOntology(IRI.generateDocumentIRI(), ontologies);
+        model = new Reasoner.ReasonerFactory().createReasoner(o);
+        System.err.println("Model read");
+        context = new PartialContext(new SimpleSetOfAttributes(createAttributes()), model);
+        initContext();
         contextTable.setModel(new ContextDataModel(context));
         Enumeration<TableColumn> e = contextTable.getColumnModel().getColumns();
         while (e.hasMoreElements()) {
@@ -219,12 +225,13 @@ public class MainWindow extends javax.swing.JFrame {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(implicationText)
+                    .addComponent(implicationText, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(acceptButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(rejectButton)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(rejectButton)
+                        .addGap(0, 615, Short.MAX_VALUE)))
+                .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -300,7 +307,12 @@ public class MainWindow extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new MainWindow().setVisible(true);
+                try {
+                    new MainWindow().setVisible(true);
+                } catch (OWLOntologyCreationException ex) {
+                    Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+                    System.exit(0);
+                }
             }
         });
     }

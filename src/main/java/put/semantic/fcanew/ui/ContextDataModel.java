@@ -37,7 +37,7 @@ public class ContextDataModel extends AbstractTableModel implements PartialConte
     public Object getValueAt(int rowIndex, int columnIndex) {
         POD pod = context.getPODs().get(rowIndex);
         if (columnIndex == 0) {
-            return pod.getId().getLocalName();
+            return pod.getId();
         }
         Attribute a = context.getAttributes().get(columnIndex - 1);
         if (pod.getPositive().contains(a)) {
@@ -77,17 +77,15 @@ public class ContextDataModel extends AbstractTableModel implements PartialConte
         System.out.printf("'%s'\n", aValue.toString());
         switch (aValue.toString()) {
             case "+":
-                pod.getNegative().remove(a);
-                pod.getPositive().add(a);
+                pod.setPositive(a);
                 break;
             case "-":
-                pod.getPositive().remove(a);
-                pod.getNegative().add(a);
+                pod.setNegative(a);
                 break;
             default:
-                pod.getPositive().remove(a);
-                pod.getNegative().remove(a);
+                pod.setUnknown(a);
                 break;
         }
+        fireTableRowsUpdated(rowIndex, rowIndex);
     }
 }

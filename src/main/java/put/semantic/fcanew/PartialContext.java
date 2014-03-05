@@ -8,7 +8,13 @@ package put.semantic.fcanew;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EventListener;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import org.semanticweb.owlapi.model.OWLClassExpression;
+import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
+import org.semanticweb.owlapi.reasoner.OWLReasoner;
+import put.semantic.fcanew.ui.ClassAttribute;
 
 /**
  *
@@ -22,6 +28,7 @@ public class PartialContext {
     }
     private List<POD> pods;
     private SetOfAttributes attributes;
+    private OWLReasoner model;
     private List<ContextChangedListener> contextChangedListeners = new ArrayList<>();
     private boolean contextChanged = false;
     private POD.PODChangedListener changeListener = new POD.PODChangedListener() {
@@ -31,9 +38,10 @@ public class PartialContext {
         }
     };
 
-    public PartialContext(SetOfAttributes attributes) {
+    public PartialContext(SetOfAttributes attributes, OWLReasoner model) {
         this.pods = new ArrayList<>();
         this.attributes = attributes;
+        this.model = model;
     }
 
     public SetOfAttributes getAttributes() {
@@ -76,12 +84,34 @@ public class PartialContext {
         example.addPODChangedListener(changeListener);
     }
 
-    public void update(Implication implication) {
-        for (POD p : pods) {
-            if (p.getPositive().containsAll(implication.getPremises())) {
-                p.getPositive().addAll(implication.getConclusions());
+    private OWLClassExpression getClass(ReadOnlySubsetOfAttributes attrs) {
+        if (attrs.isEmpty()) {
+            return model.getTopClassNode().getRepresentativeElement();
+        } else {
+            Set<OWLClassExpression> classes = new HashSet<>();
+            for (Attribute a : attrs) {
+                classes.add(((ClassAttribute) a).getOntClass());
             }
+            return model.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLObjectIntersectionOf(classes);
         }
-        fireContextChanged();
+    }
+
+    private void updateModel(Implication implication) {
+        OWLClassExpression subClass = getClass(implication.getPremises());
+        OWLClassExpression superClass = getClass(implication.getConclusions());
+        OWLSubClassOfAxiom a = model.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLSubClassOfAxiom(subClass, superClass);
+        model.getRootOntology().getOWLOntologyManager().addAxiom(model.getRootOntology(), a);
+        model.flush();
+    }
+
+    public void update(Implication implication) {
+        updateModel(implication);
+        contextChanged = false;
+        for (POD p : pods) {
+            p.update();
+        }
+        if (contextChanged) {
+            fireContextChanged();
+        }
     }
 }

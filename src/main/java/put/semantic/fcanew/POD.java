@@ -9,10 +9,14 @@
  */
 package put.semantic.fcanew;
 
-import com.hp.hpl.jena.ontology.Individual;
 import java.util.ArrayList;
 import java.util.EventListener;
 import java.util.List;
+import org.semanticweb.owlapi.model.OWLClassAssertionAxiom;
+import org.semanticweb.owlapi.model.OWLClassExpression;
+import org.semanticweb.owlapi.model.OWLIndividual;
+import org.semanticweb.owlapi.model.OWLNamedIndividual;
+import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import put.semantic.fcanew.ui.ClassAttribute;
 
 public class POD {
@@ -21,27 +25,33 @@ public class POD {
 
         public void podChanged(POD pod);
     }
-    private Individual ind;
+    private OWLNamedIndividual ind;
     private SetOfAttributes attributes;
     private SubsetOfAttributes p, n;
     private List<PODChangedListener> podChangeListeners = new ArrayList<>();
+    private OWLReasoner reasoner;
 
-    public POD(Individual ind, SetOfAttributes attributes) {
-        this.ind = ind;
-        this.attributes = attributes;
-        this.p = new SubsetOfAttributes(attributes);
-        this.n = new SubsetOfAttributes(attributes);
+    public POD(OWLNamedIndividual ind, SetOfAttributes attributes, OWLReasoner reasoner) {
+        this(ind, attributes, reasoner, new SubsetOfAttributes(attributes), new SubsetOfAttributes(attributes));
     }
 
-    public SubsetOfAttributes getPositive() {
+    public POD(OWLNamedIndividual ind, SetOfAttributes attributes, OWLReasoner reasoner, SubsetOfAttributes p, SubsetOfAttributes n) {
+        this.ind = ind;
+        this.attributes = attributes;
+        this.reasoner = reasoner;
+        this.p = p;
+        this.n = n;
+    }
+
+    public ReadOnlySubsetOfAttributes getPositive() {
         return p;
     }
 
-    public SubsetOfAttributes getNegative() {
+    public ReadOnlySubsetOfAttributes getNegative() {
         return n;
     }
 
-    public Individual getId() {
+    public OWLIndividual getId() {
         return ind;
     }
 
@@ -63,7 +73,58 @@ public class POD {
 
     @Override
     public String toString() {
-        return ind.getLocalName();
+        return ind.getIRI().getFragment();
     }
 
+    private boolean hasClass(OWLClassExpression ex) {
+        OWLClassAssertionAxiom axiom = reasoner.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLClassAssertionAxiom(ex, ind);
+        return reasoner.isEntailed(axiom);
+    }
+
+    public void update() {
+        p.clear();
+        n.clear();
+        for (Attribute a : attributes) {
+            ClassAttribute attr = (ClassAttribute) a;
+            if(hasClass(attr.getOntClass())) {
+                p.add(attr);
+            } else if (hasClass(attr.getComplement())) {
+                n.add(attr);
+            }
+        }
+        firePODChanged();
+    }
+
+    public void setPositive(Attribute a) {
+        assert a instanceof ClassAttribute;
+        ClassAttribute attr = (ClassAttribute) a;
+        OWLClassAssertionAxiom complAxiom = reasoner.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLClassAssertionAxiom(attr.getComplement(), ind);
+        OWLClassAssertionAxiom normalAxiom = reasoner.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLClassAssertionAxiom(attr.getOntClass(), ind);
+        reasoner.getRootOntology().getOWLOntologyManager().removeAxiom(reasoner.getRootOntology(), complAxiom);
+        reasoner.getRootOntology().getOWLOntologyManager().addAxiom(reasoner.getRootOntology(), normalAxiom);
+        reasoner.flush();
+        update();
+    }
+
+    public void setNegative(Attribute a) {
+        assert a instanceof ClassAttribute;
+        ClassAttribute attr = (ClassAttribute) a;
+        OWLClassAssertionAxiom complAxiom = reasoner.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLClassAssertionAxiom(attr.getComplement(), ind);
+        OWLClassAssertionAxiom normalAxiom = reasoner.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLClassAssertionAxiom(attr.getOntClass(), ind);
+        reasoner.getRootOntology().getOWLOntologyManager().addAxiom(reasoner.getRootOntology(), complAxiom);
+        reasoner.getRootOntology().getOWLOntologyManager().removeAxiom(reasoner.getRootOntology(), normalAxiom);
+        reasoner.flush();
+        update();
+    }
+
+    public void setUnknown(Attribute a) {
+        assert a instanceof ClassAttribute;
+        ClassAttribute attr = (ClassAttribute) a;
+        OWLClassAssertionAxiom complAxiom = reasoner.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLClassAssertionAxiom(attr.getComplement(), ind);
+        OWLClassAssertionAxiom normalAxiom = reasoner.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLClassAssertionAxiom(attr.getOntClass(), ind);
+        reasoner.getRootOntology().getOWLOntologyManager().removeAxiom(reasoner.getRootOntology(), complAxiom);
+        reasoner.getRootOntology().getOWLOntologyManager().removeAxiom(reasoner.getRootOntology(), normalAxiom);
+        reasoner.flush();
+        update();
+    }
 }
