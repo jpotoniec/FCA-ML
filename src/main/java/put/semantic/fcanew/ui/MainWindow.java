@@ -5,8 +5,12 @@
  */
 package put.semantic.fcanew.ui;
 
+import com.clarkparsia.pellet.owlapiv3.OWLAPILoader;
+import com.clarkparsia.pellet.owlapiv3.PelletLoader;
+import com.clarkparsia.pellet.owlapiv3.PelletReasoner;
 import darrylbu.renderer.VerticalTableHeaderCellRenderer;
 import java.awt.EventQueue;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -26,6 +30,7 @@ import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
+import org.semanticweb.owlapi.reasoner.BufferingMode;
 import org.semanticweb.owlapi.reasoner.InferenceType;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import put.semantic.fcanew.Attribute;
@@ -145,10 +150,11 @@ public class MainWindow extends javax.swing.JFrame {
         initComponents();
         OWLOntologyManager m = OWLManager.createOWLOntologyManager();
         HashSet<OWLOntology> ontologies = new HashSet<>();
-        ontologies.add(m.loadOntologyFromOntologyDocument(IRI.create("file:///home/smaug/studia/Asparagus/Main/data/University0_0.owl")));
-        ontologies.add(m.loadOntologyFromOntologyDocument(IRI.create("file:///home/smaug/studia/Asparagus/Main/data/univ-bench.owl")));
+        ontologies.add(m.loadOntologyFromOntologyDocument(IRI.create(new File("University0_0.owl"))));
+        ontologies.add(m.loadOntologyFromOntologyDocument(IRI.create(new File("univ-bench.owl"))));
         OWLOntology o = m.createOntology(IRI.generateDocumentIRI(), ontologies);
-        model = new Reasoner.ReasonerFactory().createReasoner(o);
+//        model = new Reasoner.ReasonerFactory().createReasoner(o);
+        model = new PelletReasoner(o, BufferingMode.BUFFERING);
         System.err.println("Model read");
         context = new PartialContext(new SimpleSetOfAttributes(createAttributes()), model);
         initContext();
