@@ -76,6 +76,8 @@ public class FCA {
             System.out.printf("Current implication: %s\n", current);
             if (!current.isTrivial()) {
                 processCurrentImplication();
+            } else {
+                p = getNext(p);
             }
         }
     }
