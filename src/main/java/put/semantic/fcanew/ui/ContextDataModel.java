@@ -37,7 +37,7 @@ public class ContextDataModel extends AbstractTableModel implements PartialConte
     public Object getValueAt(int rowIndex, int columnIndex) {
         POD pod = context.getPODs().get(rowIndex);
         if (columnIndex == 0) {
-            return pod.getId();
+            return pod.getId().getIRI().getFragment();
         }
         Attribute a = context.getAttributes().get(columnIndex - 1);
         if (pod.getPositive().contains(a)) {

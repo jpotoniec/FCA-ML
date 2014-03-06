@@ -12,6 +12,8 @@ import darrylbu.renderer.VerticalTableHeaderCellRenderer;
 import java.awt.EventQueue;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,10 +28,12 @@ import org.semanticweb.HermiT.Reasoner;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
+import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
+import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
 import org.semanticweb.owlapi.reasoner.BufferingMode;
 import org.semanticweb.owlapi.reasoner.InferenceType;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
@@ -50,14 +54,28 @@ public class MainWindow extends javax.swing.JFrame {
 
     private PartialContext context;
 
-    private List<Attribute> createAttributes() {
-        List<Attribute> attributes = new ArrayList<>();
+    private List<? extends Attribute> createAttributes() {
+        List<ClassAttribute> attributes = new ArrayList<>();
         Set<OWLClass> namedClasses = model.getRootOntology().getClassesInSignature(true);
         for (OWLClass clazz : namedClasses) {
             if (!model.getInstances(clazz, false).isEmpty()) {
                 attributes.add(new ClassAttribute(clazz, model));
             }
         }
+        Collections.sort(attributes, new Comparator<ClassAttribute>() {
+
+            @Override
+            public int compare(ClassAttribute a, ClassAttribute b) {
+                OWLDataFactory f = model.getRootOntology().getOWLOntologyManager().getOWLDataFactory();
+                if (model.isEntailed(f.getOWLSubClassOfAxiom(a.getOntClass(), b.getOntClass()))) {
+                    return 1;
+                }
+                if (model.isEntailed(f.getOWLSubClassOfAxiom(b.getOntClass(), a.getOntClass()))) {
+                    return -1;
+                }
+                return a.getOntClass().compareTo(b.getOntClass());
+            }
+        });
         return attributes;
     }
 
@@ -195,6 +213,7 @@ public class MainWindow extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
+        contextTable.setAutoCreateRowSorter(true);
         contextTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null},

@@ -15,7 +15,7 @@ public class SimpleSetOfAttributes implements SetOfAttributes {
 
     private List<Attribute> attributes;
 
-    public SimpleSetOfAttributes(Collection<Attribute> attributes) {
+    public SimpleSetOfAttributes(Collection<? extends Attribute> attributes) {
         this.attributes = Collections.unmodifiableList(new ArrayList<>(attributes));
     }
 

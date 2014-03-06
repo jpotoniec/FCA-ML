@@ -51,7 +51,7 @@ public class POD {
         return n;
     }
 
-    public OWLIndividual getId() {
+    public OWLNamedIndividual getId() {
         return ind;
     }
 
