@@ -5,8 +5,6 @@
  */
 package put.semantic.fcanew.ui;
 
-import com.clarkparsia.pellet.owlapiv3.OWLAPILoader;
-import com.clarkparsia.pellet.owlapiv3.PelletLoader;
 import com.clarkparsia.pellet.owlapiv3.PelletReasoner;
 import darrylbu.renderer.VerticalTableHeaderCellRenderer;
 import java.awt.EventQueue;
@@ -15,36 +13,35 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.SwingWorker;
 import javax.swing.table.TableColumn;
-import org.semanticweb.HermiT.Reasoner;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
+import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLDataFactory;
-import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
 import org.semanticweb.owlapi.reasoner.BufferingMode;
-import org.semanticweb.owlapi.reasoner.InferenceType;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import put.semantic.fcanew.Attribute;
 import put.semantic.fcanew.Expert;
 import put.semantic.fcanew.FCA;
 import put.semantic.fcanew.Implication;
-import put.semantic.fcanew.POD;
 import put.semantic.fcanew.PartialContext;
 import put.semantic.fcanew.SimpleSetOfAttributes;
-import put.semantic.fcanew.SubsetOfAttributes;
+import put.semantic.fcanew.ml.Classifier;
+import put.semantic.fcanew.ml.JavaML;
+import put.semantic.fcanew.ml.LinearRegression;
 
 /**
  *
@@ -82,7 +79,10 @@ public class MainWindow extends javax.swing.JFrame {
     private class GuiExpert implements Expert {
 
         private final Decision[] dec = new Decision[1];
+        private Map<String, Double> lastFeatures;
         private Implication currentImplication;
+//        private Classifier classifier = new LinearRegression("follows from KB", "support", "support (premises)", "support (conclusions)");
+        private Classifier classifier = new JavaML("follows from KB", "support", "support (premises)", "support (conclusions)");
 
         @Override
         public Decision verify(Implication impl) {
@@ -102,24 +102,77 @@ public class MainWindow extends javax.swing.JFrame {
         }
 
         private void accept() {
-            dec[0] = Decision.ACCEPT;
             synchronized (dec) {
+                classifier.addExample(lastFeatures, 1);
+                classifier.updateModel();
+                dec[0] = Decision.ACCEPT;
                 dec.notify();
             }
         }
 
         private void reject() {
-            dec[0] = Decision.REJECT;
             synchronized (dec) {
+                classifier.addExample(lastFeatures, 0);
+                classifier.updateModel();
+                dec[0] = Decision.REJECT;
                 dec.notify();
             }
+        }
+
+        private int getSize() {
+            return model.getRootOntology().getIndividualsInSignature().size();
+        }
+
+        private int support(OWLClassExpression expr) {
+            return model.getInstances(expr, false).getFlattened().size();
+        }
+
+        private void getFeatures(OWLClassExpression expr, String id, Map<String, Double> result) {
+            if (!id.isEmpty()) {
+                id = " (" + id + ")";
+            }
+            double support = support(expr);
+            double size = getSize();
+            result.put("support" + id, support / size);
+            result.put("sat" + id, model.isSatisfiable(expr) ? 1.0 : 0);
+        }
+
+        private Map<String, Double> getFeatures(Implication impl) {
+            OWLOntologyManager manager = model.getRootOntology().getOWLOntologyManager();
+            OWLDataFactory factory = manager.getOWLDataFactory();
+            Map<String, Double> result = new TreeMap<>();
+            OWLSubClassOfAxiom subclassAxiom = impl.toAxiom(model);
+            result.put("follows from KB", model.isEntailed(subclassAxiom) ? 1.0 : 0);
+            if (!model.getRootOntology().containsAxiom(subclassAxiom, true)) {
+                manager.addAxiom(model.getRootOntology(), subclassAxiom);
+                model.flush();
+                result.put("consistent", model.isConsistent() ? 1.0 : 0);
+                manager.removeAxiom(model.getRootOntology(), subclassAxiom);
+                model.flush();
+            }
+            OWLClassExpression pclass = impl.getPremises().getClass(model);
+            getFeatures(pclass, "premises", result);
+            OWLClassExpression cclass = impl.getConclusions().getClass(model);
+            getFeatures(cclass, "conclusions", result);
+            getFeatures(factory.getOWLObjectIntersectionOf(pclass, cclass), "", result);
+            return result;
         }
 
         private void ask(final Implication impl) {
             EventQueue.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    implicationText.setText("<html>" + impl.toString() + "</html>");
+                    Map<String, Double> features = getFeatures(impl);
+                    features.put("classifier", classifier.classify(features));
+                    lastFeatures = features;
+                    String s = "<table border=\"1\">";
+                    s += "<tr><th>Feature</th><th>Value</th></tr>";
+                    for (Map.Entry<String, Double> f : features.entrySet()) {
+                        s += String.format("<tr><td>%s</td><td>%f</td></tr>", f.getKey(), f.getValue());
+                    }
+                    s += "</table>";
+                    s += "<br>Justification: " + classifier.getJustification();
+                    implicationText.setText("<html>" + impl.toString() + "<br>" + s + "</html>");
                 }
             });
         }
@@ -158,6 +211,12 @@ public class MainWindow extends javax.swing.JFrame {
                 fca.run();
                 return null;
             }
+
+            @Override
+            protected void done() {
+                implicationText.setText("Bye-bye");
+            }
+
         }.execute();
     }
 
