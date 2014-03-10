@@ -5,6 +5,10 @@
  */
 package put.semantic.fcanew;
 
+import org.semanticweb.owlapi.model.OWLClassExpression;
+import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
+import org.semanticweb.owlapi.reasoner.OWLReasoner;
+
 /**
  *
  * @author smaug
@@ -34,5 +38,12 @@ public class Implication {
     @Override
     public String toString() {
         return premises.toString() + "->" + conclusions.toString();
+    }
+
+    public OWLSubClassOfAxiom toAxiom(OWLReasoner model) {
+        OWLClassExpression subClass = this.getPremises().getClass(model);
+        OWLClassExpression superClass = this.getConclusions().getClass(model);
+        OWLSubClassOfAxiom a = model.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLSubClassOfAxiom(subClass, superClass);
+        return a;
     }
 }

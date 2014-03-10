@@ -8,11 +8,13 @@ package put.semantic.fcanew;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EventListener;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import org.semanticweb.owlapi.model.OWLClassExpression;
+import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
+import org.semanticweb.owlapi.reasoner.InferenceType;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import put.semantic.fcanew.ui.ClassAttribute;
 
@@ -84,34 +86,50 @@ public class PartialContext {
         example.addPODChangedListener(changeListener);
     }
 
-    private OWLClassExpression getClass(ReadOnlySubsetOfAttributes attrs) {
-        if (attrs.isEmpty()) {
-            return model.getTopClassNode().getRepresentativeElement();
-        } else {
-            Set<OWLClassExpression> classes = new HashSet<>();
-            for (Attribute a : attrs) {
-                classes.add(((ClassAttribute) a).getOntClass());
-            }
-            return model.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLObjectIntersectionOf(classes);
-        }
-    }
-
     private void updateModel(Implication implication) {
-        OWLClassExpression subClass = getClass(implication.getPremises());
-        OWLClassExpression superClass = getClass(implication.getConclusions());
-        OWLSubClassOfAxiom a = model.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLSubClassOfAxiom(subClass, superClass);
+        OWLSubClassOfAxiom a = implication.toAxiom(model);
         model.getRootOntology().getOWLOntologyManager().addAxiom(model.getRootOntology(), a);
         model.flush();
     }
 
     public void update(Implication implication) {
         updateModel(implication);
-        contextChanged = false;
-        for (POD p : pods) {
-            p.update();
+        updateContext();
+        fireContextChanged();
+    }
+
+    public void updateContext() {
+        model.precomputeInferences(InferenceType.CLASS_ASSERTIONS, InferenceType.CLASS_HIERARCHY);
+        Map<OWLNamedIndividual, SubsetOfAttributes> p = new HashMap<>();
+        Map<OWLNamedIndividual, SubsetOfAttributes> n = new HashMap<>();
+        Set<OWLNamedIndividual> individuals = model.getRootOntology().getIndividualsInSignature(true);
+        for (OWLNamedIndividual i : individuals) {
+            p.put(i, new SubsetOfAttributes(getAttributes()));
+            n.put(i, new SubsetOfAttributes(getAttributes()));
         }
-        if (contextChanged) {
-            fireContextChanged();
+        for (int x = 0; x < getAttributes().size(); ++x) {
+            System.err.printf("Attribute %d/%d\n", x + 1, getAttributes().size());
+            ClassAttribute attr = (ClassAttribute) getAttributes().get(x);
+            Set<OWLNamedIndividual> instances;
+            instances = model.getInstances(attr.getOntClass(), false).getFlattened();
+            for (OWLNamedIndividual i : instances) {
+                SubsetOfAttributes attrs = p.get(i);
+                if (attrs != null) {
+                    attrs.add(x);
+                }
+            }
+            instances = model.getInstances(attr.getComplement(), false).getFlattened();
+            for (OWLNamedIndividual i : instances) {
+                SubsetOfAttributes attrs = n.get(i);
+                if (attrs != null) {
+                    attrs.add(x);
+                }
+            }
+        }
+        pods.clear();
+        for (OWLNamedIndividual i : p.keySet()) {
+            POD pod = new POD(i, getAttributes(), model, p.get(i), n.get(i));
+            addPOD(pod);
         }
     }
 }

@@ -127,40 +127,6 @@ public class MainWindow extends javax.swing.JFrame {
     private GuiExpert guiExpert = new GuiExpert();
     private OWLReasoner model;
 
-    private void initContext() {
-        model.precomputeInferences(InferenceType.CLASS_ASSERTIONS, InferenceType.CLASS_HIERARCHY);
-        Map<OWLNamedIndividual, SubsetOfAttributes> p = new HashMap<>();
-        Map<OWLNamedIndividual, SubsetOfAttributes> n = new HashMap<>();
-        Set<OWLNamedIndividual> individuals = model.getRootOntology().getIndividualsInSignature(true);
-        for (OWLNamedIndividual i : individuals) {
-            p.put(i, new SubsetOfAttributes(context.getAttributes()));
-            n.put(i, new SubsetOfAttributes(context.getAttributes()));
-        }
-        for (int x = 0; x < context.getAttributes().size(); ++x) {
-            System.err.printf("Attribute %d/%d\n", x + 1, context.getAttributes().size());
-            ClassAttribute attr = (ClassAttribute) context.getAttributes().get(x);
-            Set<OWLNamedIndividual> instances;
-            instances = model.getInstances(attr.getOntClass(), false).getFlattened();
-            for (OWLNamedIndividual i : instances) {
-                SubsetOfAttributes attrs = p.get(i);
-                if (attrs != null) {
-                    attrs.add(x);
-                }
-            }
-            instances = model.getInstances(attr.getComplement(), false).getFlattened();
-            for (OWLNamedIndividual i : instances) {
-                SubsetOfAttributes attrs = n.get(i);
-                if (attrs != null) {
-                    attrs.add(x);
-                }
-            }
-        }
-        for (OWLNamedIndividual i : p.keySet()) {
-            POD pod = new POD(i, context.getAttributes(), model, p.get(i), n.get(i));
-            context.addPOD(pod);
-        }
-    }
-
     /**
      * Creates new form MainWindow
      */
@@ -175,7 +141,7 @@ public class MainWindow extends javax.swing.JFrame {
         model = new PelletReasoner(o, BufferingMode.BUFFERING);
         System.err.println("Model read");
         context = new PartialContext(new SimpleSetOfAttributes(createAttributes()), model);
-        initContext();
+        context.updateContext();
         contextTable.setModel(new ContextDataModel(context));
         Enumeration<TableColumn> e = contextTable.getColumnModel().getColumns();
         while (e.hasMoreElements()) {

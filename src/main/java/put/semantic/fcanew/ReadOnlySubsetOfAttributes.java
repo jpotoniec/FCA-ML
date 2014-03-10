@@ -4,8 +4,13 @@
  */
 package put.semantic.fcanew;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.NavigableSet;
+import java.util.Set;
+import org.semanticweb.owlapi.model.OWLClassExpression;
+import org.semanticweb.owlapi.reasoner.OWLReasoner;
+import put.semantic.fcanew.ui.ClassAttribute;
 
 /**
  *
@@ -89,5 +94,17 @@ public abstract class ReadOnlySubsetOfAttributes implements Iterable<Attribute> 
             return y.next() == i;
         }
         return false;
+    }
+
+    public OWLClassExpression getClass(OWLReasoner model) {
+        if (isEmpty()) {
+            return model.getTopClassNode().getRepresentativeElement();
+        } else {
+            Set<OWLClassExpression> classes = new HashSet<>();
+            for (Attribute a : this) {
+                classes.add(((ClassAttribute) a).getOntClass());
+            }
+            return model.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLObjectIntersectionOf(classes);
+        }
     }
 }
