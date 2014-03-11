@@ -8,6 +8,7 @@ package put.semantic.fcanew.ui;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import put.semantic.fcanew.Attribute;
+import uk.ac.manchester.cs.owlapi.dlsyntax.DLSyntaxObjectRenderer;
 
 /**
  *
@@ -36,8 +37,7 @@ public class ClassAttribute implements Attribute {
     public String toString() {
         if (!clazz.isAnonymous()) {
             return clazz.asOWLClass().getIRI().getFragment();
-        } else {
-            return clazz.toString();
         }
+        return new DLSyntaxObjectRenderer().render(clazz);
     }
 }

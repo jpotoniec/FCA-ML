@@ -28,6 +28,7 @@ import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLDataFactory;
+import org.semanticweb.owlapi.model.OWLObjectProperty;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
@@ -54,9 +55,22 @@ public class MainWindow extends javax.swing.JFrame {
     private PartialContext context;
 
     private List<? extends Attribute> createAttributes() {
+        final OWLDataFactory f = model.getRootOntology().getOWLOntologyManager().getOWLDataFactory();
         List<ClassAttribute> attributes = new ArrayList<>();
         Set<OWLClass> namedClasses = model.getRootOntology().getClassesInSignature(true);
         for (OWLClass clazz : namedClasses) {
+            if (!model.getInstances(clazz, false).isEmpty()) {
+                attributes.add(new ClassAttribute(clazz, model));
+            }
+        }
+        Set<OWLObjectProperty> objectProperties = model.getRootOntology().getObjectPropertiesInSignature(true);
+        for (OWLObjectProperty property : objectProperties) {
+            OWLClassExpression clazz;
+            clazz = f.getOWLObjectSomeValuesFrom(property, f.getOWLThing());
+            if (!model.getInstances(clazz, false).isEmpty()) {
+                attributes.add(new ClassAttribute(clazz, model));
+            }
+            clazz = f.getOWLObjectSomeValuesFrom(f.getOWLObjectInverseOf(property), f.getOWLThing());
             if (!model.getInstances(clazz, false).isEmpty()) {
                 attributes.add(new ClassAttribute(clazz, model));
             }
@@ -65,7 +79,6 @@ public class MainWindow extends javax.swing.JFrame {
 
             @Override
             public int compare(ClassAttribute a, ClassAttribute b) {
-                OWLDataFactory f = model.getRootOntology().getOWLOntologyManager().getOWLDataFactory();
                 if (model.isEntailed(f.getOWLSubClassOfAxiom(a.getOntClass(), b.getOntClass()))) {
                     return 1;
                 }
