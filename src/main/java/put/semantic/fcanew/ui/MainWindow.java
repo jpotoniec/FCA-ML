@@ -21,6 +21,7 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.SwingWorker;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.IRI;
@@ -90,6 +91,11 @@ public class MainWindow extends javax.swing.JFrame {
             classifier.setup("follows from KB", "support", "support (premises)", "support (conclusions)");
         }
 
+        private void setEnabled(boolean enabled) {
+            acceptButton.setEnabled(enabled);
+            rejectButton.setEnabled(enabled);
+        }
+
         @Override
         public Decision verify(Implication impl) {
             this.currentImplication = impl;
@@ -108,6 +114,7 @@ public class MainWindow extends javax.swing.JFrame {
         }
 
         private void accept() {
+            setEnabled(false);
             synchronized (dec) {
                 classifier.addExample(lastFeatures, true);
                 classifier.updateModel();
@@ -117,6 +124,7 @@ public class MainWindow extends javax.swing.JFrame {
         }
 
         private void reject() {
+            setEnabled(false);
             synchronized (dec) {
                 classifier.addExample(lastFeatures, false);
                 classifier.updateModel();
@@ -171,14 +179,15 @@ public class MainWindow extends javax.swing.JFrame {
                     Map<String, Double> features = getFeatures(impl);
                     features.put("classifier", classifier.classify(features));
                     lastFeatures = features;
-                    String s = "<table border=\"1\">";
-                    s += "<tr><th>Feature</th><th>Value</th></tr>";
+                    DefaultTableModel model = new DefaultTableModel(new String[]{"feature", "value"}, 0);
                     for (Map.Entry<String, Double> f : features.entrySet()) {
-                        s += String.format("<tr><td>%s</td><td>%f</td></tr>", f.getKey(), f.getValue());
+                        model.addRow(new Object[]{f.getKey(), f.getValue()});
                     }
-                    s += "</table>";
-                    s += "<br>Justification: " + classifier.getJustification();
+                    featuresTable.setModel(model);
+                    String s = "";
+                    s += "<br>Justification: <br><pre>" + classifier.getJustification() + "</pre>";
                     implicationText.setText("<html>" + impl.toString() + "<br>" + s + "</html>");
+                    setEnabled(true);
                 }
             });
         }
@@ -235,28 +244,22 @@ public class MainWindow extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jScrollPane1 = new javax.swing.JScrollPane();
-        contextTable = new javax.swing.JTable();
+        jSplitPane2 = new javax.swing.JSplitPane();
+        jSplitPane1 = new javax.swing.JSplitPane();
         jPanel1 = new javax.swing.JPanel();
         implicationText = new javax.swing.JLabel();
         acceptButton = new javax.swing.JButton();
         rejectButton = new javax.swing.JButton();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        featuresTable = new javax.swing.JTable();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        contextTable = new javax.swing.JTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        contextTable.setAutoCreateRowSorter(true);
-        contextTable.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
-        jScrollPane1.setViewportView(contextTable);
+        jSplitPane2.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
+
+        jSplitPane1.setDividerLocation(369);
 
         implicationText.setText("jLabel1");
 
@@ -286,7 +289,7 @@ public class MainWindow extends javax.swing.JFrame {
                         .addComponent(acceptButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(rejectButton)
-                        .addGap(0, 615, Short.MAX_VALUE)))
+                        .addGap(0, 173, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -294,12 +297,47 @@ public class MainWindow extends javax.swing.JFrame {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(implicationText)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 108, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(acceptButton)
                     .addComponent(rejectButton))
-                .addContainerGap())
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
+
+        jSplitPane1.setLeftComponent(jPanel1);
+
+        featuresTable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null}
+            },
+            new String [] {
+                "Title 1", "Title 2", "Title 3", "Title 4"
+            }
+        ));
+        jScrollPane2.setViewportView(featuresTable);
+
+        jSplitPane1.setRightComponent(jScrollPane2);
+
+        jSplitPane2.setTopComponent(jSplitPane1);
+
+        contextTable.setAutoCreateRowSorter(true);
+        contextTable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null}
+            },
+            new String [] {
+                "Title 1", "Title 2", "Title 3", "Title 4"
+            }
+        ));
+        jScrollPane1.setViewportView(contextTable);
+
+        jSplitPane2.setRightComponent(jScrollPane1);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -307,19 +345,14 @@ public class MainWindow extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 810, Short.MAX_VALUE)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(jSplitPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 1099, Short.MAX_VALUE)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 350, Short.MAX_VALUE)
-                .addContainerGap())
+                .addGap(0, 12, Short.MAX_VALUE)
+                .addComponent(jSplitPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         pack();
@@ -375,9 +408,13 @@ public class MainWindow extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton acceptButton;
     private javax.swing.JTable contextTable;
+    private javax.swing.JTable featuresTable;
     private javax.swing.JLabel implicationText;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JSplitPane jSplitPane1;
+    private javax.swing.JSplitPane jSplitPane2;
     private javax.swing.JButton rejectButton;
     // End of variables declaration//GEN-END:variables
 }
