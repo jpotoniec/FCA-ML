@@ -42,6 +42,7 @@ import put.semantic.fcanew.SimpleSetOfAttributes;
 import put.semantic.fcanew.ml.Classifier;
 import put.semantic.fcanew.ml.JavaML;
 import put.semantic.fcanew.ml.LinearRegression;
+import put.semantic.fcanew.ml.WekaClassifier;
 
 /**
  *
@@ -82,7 +83,12 @@ public class MainWindow extends javax.swing.JFrame {
         private Map<String, Double> lastFeatures;
         private Implication currentImplication;
 //        private Classifier classifier = new LinearRegression("follows from KB", "support", "support (premises)", "support (conclusions)");
-        private Classifier classifier = new JavaML("follows from KB", "support", "support (premises)", "support (conclusions)");
+        private Classifier classifier;
+
+        public GuiExpert() {
+            classifier = new WekaClassifier();
+            classifier.setup("follows from KB", "support", "support (premises)", "support (conclusions)");
+        }
 
         @Override
         public Decision verify(Implication impl) {
@@ -103,7 +109,7 @@ public class MainWindow extends javax.swing.JFrame {
 
         private void accept() {
             synchronized (dec) {
-                classifier.addExample(lastFeatures, 1);
+                classifier.addExample(lastFeatures, true);
                 classifier.updateModel();
                 dec[0] = Decision.ACCEPT;
                 dec.notify();
@@ -112,7 +118,7 @@ public class MainWindow extends javax.swing.JFrame {
 
         private void reject() {
             synchronized (dec) {
-                classifier.addExample(lastFeatures, 0);
+                classifier.addExample(lastFeatures, false);
                 classifier.updateModel();
                 dec[0] = Decision.REJECT;
                 dec.notify();

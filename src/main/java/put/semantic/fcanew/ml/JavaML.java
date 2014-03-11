@@ -18,12 +18,9 @@ public class JavaML extends put.semantic.fcanew.ml.AbstractClassifier {
     private AbstractClassifier classifier = new LibSVM();
     private Dataset dataset = new DefaultDataset();
 
-    public JavaML(String... attributes) {
-        super(Arrays.asList(attributes));
-    }
-
     @Override
-    public void addExample(Map<String, Double> features, double decision) {
+    public void addExample(Map<String, Double> features, boolean accept) {
+        double decision = accept ? 1 : 0;
         dataset.add(new DenseInstance(transform(features), decision));
     }
 

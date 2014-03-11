@@ -5,15 +5,20 @@
  */
 package put.semantic.fcanew.ml;
 
+import java.util.List;
 import java.util.Map;
 
 public interface Classifier {
 
-    public void addExample(Map<String, Double> features, double decision);
+    public void addExample(Map<String, Double> features, boolean accept);
 
     public void updateModel();
 
     public double classify(Map<String, Double> featuresMap);
 
     public String getJustification();
+
+    public void setup(List<String> attributes);
+
+    public void setup(String... attributes);
 }

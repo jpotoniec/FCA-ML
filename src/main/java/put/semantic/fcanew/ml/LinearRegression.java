@@ -25,12 +25,9 @@ public class LinearRegression extends AbstractClassifier {
     private List<Double> decisions = new ArrayList<>();
     private OLSMultipleLinearRegression regression = new OLSMultipleLinearRegression();
 
-    public LinearRegression(String... attributes) {
-        super(Arrays.asList(attributes));
-    }
-
     @Override
-    public void addExample(Map<String, Double> features, double decision) {
+    public void addExample(Map<String, Double> features, boolean accept) {
+        double decision = accept ? 1 : 0;
         examples.add(transform(features));
         decisions.add(decision);
     }

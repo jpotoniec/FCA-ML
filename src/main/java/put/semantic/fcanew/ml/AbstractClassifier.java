@@ -15,14 +15,21 @@ import java.util.Map;
  */
 public abstract class AbstractClassifier implements Classifier {
 
-    protected List<String> attributes;
+    protected List<String> attributes = null;
     protected String justification = "";
 
-    public AbstractClassifier(List<String> attributes) {
+    @Override
+    public void setup(List<String> attributes) {
         this.attributes = attributes;
     }
 
+    @Override
+    public void setup(String... attributes) {
+        setup(Arrays.asList(attributes));
+    }
+
     protected double[] transform(Map<String, Double> features) {
+        assert attributes != null;
         double[] example = new double[attributes.size()];
         for (int i = 0; i < example.length; ++i) {
             example[i] = Double.NaN;
