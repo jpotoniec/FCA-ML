@@ -17,6 +17,7 @@ import uk.ac.manchester.cs.owlapi.dlsyntax.DLSyntaxObjectRenderer;
 public class ClassAttribute implements Attribute {
 
     private OWLClassExpression clazz, complement;
+    private static DLSyntaxObjectRenderer renderer = new DLSyntaxObjectRenderer();
 
     public ClassAttribute(OWLClassExpression clazz, OWLReasoner reasoner) {
         this.clazz = clazz;
@@ -35,9 +36,6 @@ public class ClassAttribute implements Attribute {
 
     @Override
     public String toString() {
-        if (!clazz.isAnonymous()) {
-            return clazz.asOWLClass().getIRI().getFragment();
-        }
-        return new DLSyntaxObjectRenderer().render(clazz);
+        return renderer.render(clazz);
     }
 }
