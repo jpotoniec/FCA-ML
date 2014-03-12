@@ -220,6 +220,7 @@ public class MainWindow extends javax.swing.JFrame {
         OWLOntology o = m.createOntology(IRI.generateDocumentIRI(), ontologies);
 //        model = new Reasoner.ReasonerFactory().createReasoner(o);
         model = new PelletReasoner(o, BufferingMode.BUFFERING);
+//        model = new JFactFactory().createReasoner(o);
         System.err.println("Model read");
         context = new PartialContext(new SimpleSetOfAttributes(createAttributes()), model);
         context.updateContext();

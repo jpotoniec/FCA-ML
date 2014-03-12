@@ -75,5 +75,10 @@
             <artifactId>weka-stable</artifactId>
             <version>3.6.10</version>
         </dependency>
+        <dependency>
+            <groupId>net.sourceforge.owlapi</groupId>
+            <artifactId>jfact</artifactId>
+            <version>1.2.1</version>
+        </dependency>
     </dependencies>
 </project>
