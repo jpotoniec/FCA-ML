@@ -22,14 +22,14 @@ import put.semantic.fcanew.ml.features.values.FeatureValue;
  *
  * @author smaug
  */
-public class ConsistencyCalculator extends AbstractFeatureCalculator {
+public class ConsistencyCalculator extends SingleFeatureCalculator {
 
     public ConsistencyCalculator() {
         super("consistent");
     }
 
     @Override
-    public FeatureValue compute(Implication impl, OWLReasoner model, PartialContext context) {
+    public FeatureValue computeSingle(Implication impl, OWLReasoner model, PartialContext context) {
         OWLOntologyManager manager = model.getRootOntology().getOWLOntologyManager();
         OWLSubClassOfAxiom subclassAxiom = impl.toAxiom(model);
         boolean result = true;

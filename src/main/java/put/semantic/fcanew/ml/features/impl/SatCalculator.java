@@ -5,27 +5,35 @@
  */
 package put.semantic.fcanew.ml.features.impl;
 
+import java.util.List;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import put.semantic.fcanew.Implication;
 import put.semantic.fcanew.PartialContext;
+import put.semantic.fcanew.ml.features.AbstractFeatureCalculator;
 import put.semantic.fcanew.ml.features.values.BooleanFeatureValue;
-import put.semantic.fcanew.ml.features.values.FeatureValue;
 
 /**
  *
  * @author smaug
  */
-public class SatCalculator extends PCAbstractFeatureCalculator {
+public class SatCalculator extends AbstractFeatureCalculator {
 
-    public SatCalculator(boolean p, boolean c) {
-        super("sat", p, c);
+    public SatCalculator() {
+        super("sat",
+                "sat (premises)",
+                "sat (conclusions)"
+        );
     }
 
     @Override
-    public FeatureValue compute(Implication impl, OWLReasoner model, PartialContext context) {
-        OWLClassExpression expr = getClassExpression(impl, model);
-        return new BooleanFeatureValue(model.isSatisfiable(expr));
+    public List<? extends BooleanFeatureValue> compute(Implication impl, OWLReasoner model, PartialContext context) {
+        OWLClassExpression p = impl.getPremises().getClass(model);
+        OWLClassExpression c = impl.getConclusions().getClass(model);
+        OWLClassExpression pc = model.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLObjectIntersectionOf(p, c);
+        return transform(model.isSatisfiable(pc),
+                model.isSatisfiable(p),
+                model.isSatisfiable(c));
     }
 
 }

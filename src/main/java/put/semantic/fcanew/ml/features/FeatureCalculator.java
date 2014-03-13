@@ -5,6 +5,7 @@
  */
 package put.semantic.fcanew.ml.features;
 
+import java.util.List;
 import put.semantic.fcanew.ml.features.values.FeatureValue;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import put.semantic.fcanew.Implication;
@@ -16,7 +17,7 @@ import put.semantic.fcanew.PartialContext;
  */
 public interface FeatureCalculator {
 
-    public String getName();
+    public List<String> getNames();
 
-    public FeatureValue compute(Implication impl, OWLReasoner model, PartialContext context);
+    public List<? extends FeatureValue> compute(Implication impl, OWLReasoner model, PartialContext context);
 }

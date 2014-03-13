@@ -50,7 +50,7 @@ import put.semantic.fcanew.ml.features.FeatureCalculator;
 import put.semantic.fcanew.ml.features.impl.ConsistencyCalculator;
 import put.semantic.fcanew.ml.features.impl.FollowingCalculators;
 import put.semantic.fcanew.ml.features.impl.SatCalculator;
-import put.semantic.fcanew.ml.features.impl.SupportCalculator;
+import put.semantic.fcanew.ml.features.impl.RuleCalculator;
 import put.semantic.fcanew.ml.features.values.FeatureValue;
 import put.semantic.fcanew.ml.features.values.NumericFeatureValue;
 
@@ -114,13 +114,9 @@ public class MainWindow extends javax.swing.JFrame {
     private class GuiExpert implements Expert {
 
         private final List<? extends FeatureCalculator> calculators = Arrays.asList(
-                new SupportCalculator(true, false),
-                new SupportCalculator(false, true),
-                new SupportCalculator(true, true),
+                new RuleCalculator(),
                 new FollowingCalculators(),
-                new SatCalculator(true, false),
-                new SatCalculator(false, true),
-                new SatCalculator(true, true),
+                new SatCalculator(),
                 new ConsistencyCalculator()
         );
 
@@ -134,7 +130,7 @@ public class MainWindow extends javax.swing.JFrame {
             classifier = new WekaClassifier();
             List<String> features = new ArrayList<>();
             for (FeatureCalculator calc : calculators) {
-                features.add(calc.getName());
+                features.addAll(calc.getNames());
             }
             classifier.setup(features.toArray(new String[0]));
         }
@@ -184,8 +180,11 @@ public class MainWindow extends javax.swing.JFrame {
         private Map<String, Double> getFeatures(Implication impl) {
             Map<String, Double> result = new TreeMap<>();
             for (FeatureCalculator calc : calculators) {
-                FeatureValue val = calc.compute(impl, model, context);
-                result.put(calc.getName(), ((NumericFeatureValue) val).getValue());
+                List<String> names = calc.getNames();
+                List<? extends FeatureValue> values = calc.compute(impl, model, context);
+                for (int i = 0; i < names.size(); ++i) {
+                    result.put(names.get(i), ((NumericFeatureValue) values.get(i)).getValue());
+                }
             }
             return result;
         }
