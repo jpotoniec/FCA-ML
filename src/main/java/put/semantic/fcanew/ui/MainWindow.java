@@ -11,6 +11,7 @@ import java.awt.EventQueue;
 import java.awt.Font;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
@@ -33,7 +34,6 @@ import org.semanticweb.owlapi.model.OWLObjectProperty;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
-import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
 import org.semanticweb.owlapi.reasoner.BufferingMode;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import put.semantic.fcanew.Attribute;
@@ -46,6 +46,13 @@ import put.semantic.fcanew.SimpleSetOfAttributes;
 import put.semantic.fcanew.ml.Classifier;
 import put.semantic.fcanew.ml.LinearRegression;
 import put.semantic.fcanew.ml.WekaClassifier;
+import put.semantic.fcanew.ml.features.FeatureCalculator;
+import put.semantic.fcanew.ml.features.impl.ConsistencyCalculator;
+import put.semantic.fcanew.ml.features.impl.FollowingCalculators;
+import put.semantic.fcanew.ml.features.impl.SatCalculator;
+import put.semantic.fcanew.ml.features.impl.SupportCalculator;
+import put.semantic.fcanew.ml.features.values.FeatureValue;
+import put.semantic.fcanew.ml.features.values.NumericFeatureValue;
 
 /**
  *
@@ -106,6 +113,17 @@ public class MainWindow extends javax.swing.JFrame {
 
     private class GuiExpert implements Expert {
 
+        private final List<? extends FeatureCalculator> calculators = Arrays.asList(
+                new SupportCalculator(true, false),
+                new SupportCalculator(false, true),
+                new SupportCalculator(true, true),
+                new FollowingCalculators(),
+                new SatCalculator(true, false),
+                new SatCalculator(false, true),
+                new SatCalculator(true, true),
+                new ConsistencyCalculator()
+        );
+
         private final Decision[] dec = new Decision[1];
         private Map<String, Double> lastFeatures;
         private Implication currentImplication;
@@ -114,7 +132,11 @@ public class MainWindow extends javax.swing.JFrame {
 
         public GuiExpert() {
             classifier = new WekaClassifier();
-            classifier.setup("follows from KB", "support", "support (premises)", "support (conclusions)");
+            List<String> features = new ArrayList<>();
+            for (FeatureCalculator calc : calculators) {
+                features.add(calc.getName());
+            }
+            classifier.setup(features.toArray(new String[0]));
         }
 
         private void setEnabled(boolean enabled) {
@@ -159,42 +181,12 @@ public class MainWindow extends javax.swing.JFrame {
             }
         }
 
-        private int getSize() {
-            return model.getRootOntology().getIndividualsInSignature().size();
-        }
-
-        private int support(OWLClassExpression expr) {
-            return model.getInstances(expr, false).getFlattened().size();
-        }
-
-        private void getFeatures(OWLClassExpression expr, String id, Map<String, Double> result) {
-            if (!id.isEmpty()) {
-                id = " (" + id + ")";
-            }
-            double support = support(expr);
-            double size = getSize();
-            result.put("support" + id, support / size);
-            result.put("sat" + id, model.isSatisfiable(expr) ? 1.0 : 0);
-        }
-
         private Map<String, Double> getFeatures(Implication impl) {
-            OWLOntologyManager manager = model.getRootOntology().getOWLOntologyManager();
-            OWLDataFactory factory = manager.getOWLDataFactory();
             Map<String, Double> result = new TreeMap<>();
-            OWLSubClassOfAxiom subclassAxiom = impl.toAxiom(model);
-            result.put("follows from KB", model.isEntailed(subclassAxiom) ? 1.0 : 0);
-            if (!model.getRootOntology().containsAxiom(subclassAxiom, true)) {
-                manager.addAxiom(model.getRootOntology(), subclassAxiom);
-                model.flush();
-                result.put("consistent", model.isConsistent() ? 1.0 : 0);
-                manager.removeAxiom(model.getRootOntology(), subclassAxiom);
-                model.flush();
+            for (FeatureCalculator calc : calculators) {
+                FeatureValue val = calc.compute(impl, model, context);
+                result.put(calc.getName(), ((NumericFeatureValue) val).getValue());
             }
-            OWLClassExpression pclass = impl.getPremises().getClass(model);
-            getFeatures(pclass, "premises", result);
-            OWLClassExpression cclass = impl.getConclusions().getClass(model);
-            getFeatures(cclass, "conclusions", result);
-            getFeatures(factory.getOWLObjectIntersectionOf(pclass, cclass), "", result);
             return result;
         }
 
