@@ -8,6 +8,7 @@ package put.semantic.fcanew.ui;
 import com.clarkparsia.pellet.owlapiv3.PelletReasoner;
 import darrylbu.renderer.VerticalTableHeaderCellRenderer;
 import java.awt.EventQueue;
+import java.awt.Font;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -89,6 +90,18 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
         return attributes;
+    }
+
+    private Font normalFont, boldFont;
+
+    private void highlightButton(double p) {
+        acceptButton.setFont(normalFont);
+        rejectButton.setFont(normalFont);
+        if (p > 0.6) {
+            acceptButton.setFont(boldFont);
+        } else if (p < 0.4) {
+            rejectButton.setFont(boldFont);
+        }
     }
 
     private class GuiExpert implements Expert {
@@ -190,7 +203,9 @@ public class MainWindow extends javax.swing.JFrame {
                 @Override
                 public void run() {
                     Map<String, Double> features = getFeatures(impl);
-                    features.put("classifier", classifier.classify(features));
+                    double clResult = classifier.classify(features);
+                    highlightButton(clResult);
+                    features.put("classifier", clResult);
                     lastFeatures = features;
                     DefaultTableModel model = new DefaultTableModel(new String[]{"feature", "value"}, 0);
                     for (Map.Entry<String, Double> f : features.entrySet()) {
@@ -213,6 +228,8 @@ public class MainWindow extends javax.swing.JFrame {
      */
     public MainWindow() throws OWLOntologyCreationException {
         initComponents();
+        normalFont = acceptButton.getFont();
+        boldFont = normalFont.deriveFont(Font.BOLD);
         OWLOntologyManager m = OWLManager.createOWLOntologyManager();
         HashSet<OWLOntology> ontologies = new HashSet<>();
         ontologies.add(m.loadOntologyFromOntologyDocument(IRI.create(new File("University0_0.owl"))));
