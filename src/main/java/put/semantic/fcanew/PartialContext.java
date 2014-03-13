@@ -39,11 +39,26 @@ public class PartialContext {
             contextChanged = true;
         }
     };
+    private List<ProgressListener> progessListeners = new ArrayList<ProgressListener>();
 
     public PartialContext(SetOfAttributes attributes, OWLReasoner model) {
         this.pods = new ArrayList<>();
         this.attributes = attributes;
         this.model = model;
+        addProgressListener(new ProgressListener() {
+
+            int max = 0;
+
+            @Override
+            public void reset(int max) {
+                this.max = max;
+            }
+
+            @Override
+            public void update(int status) {
+                System.err.printf("Attribute %d/%d\n", status, max);
+            }
+        });
     }
 
     public SetOfAttributes getAttributes() {
@@ -107,8 +122,9 @@ public class PartialContext {
             p.put(i, new SubsetOfAttributes(getAttributes()));
             n.put(i, new SubsetOfAttributes(getAttributes()));
         }
+        fireProgressListenerReset(getAttributes().size());
         for (int x = 0; x < getAttributes().size(); ++x) {
-            System.err.printf("Attribute %d/%d\n", x + 1, getAttributes().size());
+            fireProgressUpdate(x + 1);
             ClassAttribute attr = (ClassAttribute) getAttributes().get(x);
             Set<OWLNamedIndividual> instances;
             instances = model.getInstances(attr.getOntClass(), false).getFlattened();
@@ -130,6 +146,28 @@ public class PartialContext {
         for (OWLNamedIndividual i : p.keySet()) {
             POD pod = new POD(i, getAttributes(), model, p.get(i), n.get(i));
             addPOD(pod);
+        }
+    }
+
+    public void addProgressListener(ProgressListener l) {
+        if (l != null) {
+            progessListeners.add(l);
+        }
+    }
+
+    public void removeProgressListener(ProgressListener l) {
+        progessListeners.remove(l);
+    }
+
+    protected void fireProgressListenerReset(int max) {
+        for (ProgressListener l : progessListeners) {
+            l.reset(max);
+        }
+    }
+
+    protected void fireProgressUpdate(int status) {
+        for (ProgressListener l : progessListeners) {
+            l.update(status);
         }
     }
 }

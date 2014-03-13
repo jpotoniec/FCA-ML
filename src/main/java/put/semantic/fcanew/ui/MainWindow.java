@@ -40,6 +40,7 @@ import put.semantic.fcanew.Expert;
 import put.semantic.fcanew.FCA;
 import put.semantic.fcanew.Implication;
 import put.semantic.fcanew.PartialContext;
+import put.semantic.fcanew.ProgressListener;
 import put.semantic.fcanew.SimpleSetOfAttributes;
 import put.semantic.fcanew.ml.Classifier;
 import put.semantic.fcanew.ml.JavaML;
@@ -223,6 +224,18 @@ public class MainWindow extends javax.swing.JFrame {
 //        model = new JFactFactory().createReasoner(o);
         System.err.println("Model read");
         context = new PartialContext(new SimpleSetOfAttributes(createAttributes()), model);
+        context.addProgressListener(new ProgressListener() {
+
+            @Override
+            public void reset(int max) {
+                updateProgressBar.setMaximum(max);
+            }
+
+            @Override
+            public void update(int status) {
+                updateProgressBar.setValue(status);
+            }
+        });
         context.updateContext();
         contextTable.setModel(new ContextDataModel(context));
         Enumeration<TableColumn> e = contextTable.getColumnModel().getColumns();
@@ -264,6 +277,7 @@ public class MainWindow extends javax.swing.JFrame {
         implicationText = new javax.swing.JLabel();
         acceptButton = new javax.swing.JButton();
         rejectButton = new javax.swing.JButton();
+        updateProgressBar = new javax.swing.JProgressBar();
         jScrollPane2 = new javax.swing.JScrollPane();
         featuresTable = new javax.swing.JTable();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -273,7 +287,7 @@ public class MainWindow extends javax.swing.JFrame {
 
         jSplitPane2.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
 
-        jSplitPane1.setDividerLocation(369);
+        jSplitPane1.setDividerLocation(730);
 
         implicationText.setText("jLabel1");
 
@@ -303,7 +317,8 @@ public class MainWindow extends javax.swing.JFrame {
                         .addComponent(acceptButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(rejectButton)
-                        .addGap(0, 173, Short.MAX_VALUE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(updateProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, 522, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -312,9 +327,11 @@ public class MainWindow extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(implicationText)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(acceptButton)
-                    .addComponent(rejectButton))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(acceptButton)
+                        .addComponent(rejectButton))
+                    .addComponent(updateProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -365,8 +382,9 @@ public class MainWindow extends javax.swing.JFrame {
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGap(0, 12, Short.MAX_VALUE)
-                .addComponent(jSplitPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap()
+                .addComponent(jSplitPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 853, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         pack();
@@ -430,5 +448,6 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JSplitPane jSplitPane2;
     private javax.swing.JButton rejectButton;
+    private javax.swing.JProgressBar updateProgressBar;
     // End of variables declaration//GEN-END:variables
 }
