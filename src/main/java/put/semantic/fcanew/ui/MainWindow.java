@@ -43,7 +43,6 @@ import put.semantic.fcanew.PartialContext;
 import put.semantic.fcanew.ProgressListener;
 import put.semantic.fcanew.SimpleSetOfAttributes;
 import put.semantic.fcanew.ml.Classifier;
-import put.semantic.fcanew.ml.JavaML;
 import put.semantic.fcanew.ml.LinearRegression;
 import put.semantic.fcanew.ml.WekaClassifier;
 
