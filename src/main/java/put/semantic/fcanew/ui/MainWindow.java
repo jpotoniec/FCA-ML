@@ -134,10 +134,9 @@ public class MainWindow extends javax.swing.JFrame {
                 new RuleCalculator(false),
                 new FollowingCalculators(),
                 new SatCalculator(),
-                new ConsistencyCalculator()
-        );
-
-        private final Decision[] dec = new Decision[1];
+                new ConsistencyCalculator());
+        private final Object lock = new Object();
+        private Decision dec;
         private Map<String, Double> lastFeatures;
         private Implication currentImplication;
 //        private Classifier classifier = new LinearRegression("follows from KB", "support", "support (premises)", "support (conclusions)");
@@ -163,11 +162,11 @@ public class MainWindow extends javax.swing.JFrame {
             ask(impl);
             while (true) {
                 try {
-                    synchronized (dec) {
-                        dec.wait();
+                    synchronized (lock) {
+                        lock.wait();
+                        System.out.println("Decision: " + dec);
+                        return dec;
                     }
-                    System.out.println("Decision: " + dec[0]);
-                    return dec[0];
                 } catch (InterruptedException ex) {
                     Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -176,21 +175,21 @@ public class MainWindow extends javax.swing.JFrame {
 
         private void accept() {
             setEnabled(false);
-            synchronized (dec) {
+            synchronized (lock) {
                 classifier.addExample(lastFeatures, true);
                 classifier.updateModel();
-                dec[0] = Decision.ACCEPT;
-                dec.notify();
+                dec = Decision.ACCEPT;
+                lock.notify();
             }
         }
 
         private void reject() {
             setEnabled(false);
-            synchronized (dec) {
+            synchronized (lock) {
                 classifier.addExample(lastFeatures, false);
                 classifier.updateModel();
-                dec[0] = Decision.REJECT;
-                dec.notify();
+                dec = Decision.REJECT;
+                lock.notify();
             }
         }
 
