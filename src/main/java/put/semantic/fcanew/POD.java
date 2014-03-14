@@ -14,7 +14,6 @@ import java.util.EventListener;
 import java.util.List;
 import org.semanticweb.owlapi.model.OWLClassAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLClassExpression;
-import org.semanticweb.owlapi.model.OWLIndividual;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import put.semantic.fcanew.ui.ClassAttribute;
@@ -86,7 +85,7 @@ public class POD {
         n.clear();
         for (Attribute a : attributes) {
             ClassAttribute attr = (ClassAttribute) a;
-            if(hasClass(attr.getOntClass())) {
+            if (hasClass(attr.getOntClass())) {
                 p.add(attr);
             } else if (hasClass(attr.getComplement())) {
                 n.add(attr);

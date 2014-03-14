@@ -2,13 +2,22 @@
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
+ *//*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
  */
 package put.semantic.fcanew.ui;
 
 import com.clarkparsia.pellet.owlapiv3.PelletReasoner;
+import darrylbu.renderer.DefaultTableHeaderCellRenderer;
 import darrylbu.renderer.VerticalTableHeaderCellRenderer;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,8 +31,14 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTable;
 import javax.swing.SwingWorker;
+import javax.swing.plaf.LabelUI;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.IRI;
@@ -44,15 +59,15 @@ import put.semantic.fcanew.PartialContext;
 import put.semantic.fcanew.ProgressListener;
 import put.semantic.fcanew.SimpleSetOfAttributes;
 import put.semantic.fcanew.ml.Classifier;
-import put.semantic.fcanew.ml.LinearRegression;
 import put.semantic.fcanew.ml.WekaClassifier;
 import put.semantic.fcanew.ml.features.FeatureCalculator;
 import put.semantic.fcanew.ml.features.impl.ConsistencyCalculator;
 import put.semantic.fcanew.ml.features.impl.FollowingCalculators;
-import put.semantic.fcanew.ml.features.impl.SatCalculator;
 import put.semantic.fcanew.ml.features.impl.RuleCalculator;
+import put.semantic.fcanew.ml.features.impl.SatCalculator;
 import put.semantic.fcanew.ml.features.values.FeatureValue;
 import put.semantic.fcanew.ml.features.values.NumericFeatureValue;
+import uk.ac.manchester.cs.owlapi.dlsyntax.DLSyntaxObjectRenderer;
 
 /**
  *
@@ -63,6 +78,7 @@ public class MainWindow extends javax.swing.JFrame {
     private PartialContext context;
 
     private List<? extends Attribute> createAttributes() {
+        DLSyntaxObjectRenderer r = new DLSyntaxObjectRenderer();
         final OWLDataFactory f = model.getRootOntology().getOWLOntologyManager().getOWLDataFactory();
         List<ClassAttribute> attributes = new ArrayList<>();
         Set<OWLClass> namedClasses = model.getRootOntology().getClassesInSignature(true);
@@ -114,7 +130,8 @@ public class MainWindow extends javax.swing.JFrame {
     private class GuiExpert implements Expert {
 
         private final List<? extends FeatureCalculator> calculators = Arrays.asList(
-                new RuleCalculator(),
+                new RuleCalculator(true),
+                new RuleCalculator(false),
                 new FollowingCalculators(),
                 new SatCalculator(),
                 new ConsistencyCalculator()
@@ -193,6 +210,7 @@ public class MainWindow extends javax.swing.JFrame {
             EventQueue.invokeLater(new Runnable() {
                 @Override
                 public void run() {
+                    ((ContextDataModel) contextTable.getModel()).setCurrentImplication(currentImplication);
                     Map<String, Double> features = getFeatures(impl);
                     double clResult = classifier.classify(features);
                     highlightButton(clResult);
@@ -222,9 +240,8 @@ public class MainWindow extends javax.swing.JFrame {
         normalFont = acceptButton.getFont();
         boldFont = normalFont.deriveFont(Font.BOLD);
         OWLOntologyManager m = OWLManager.createOWLOntologyManager();
-        HashSet<OWLOntology> ontologies = new HashSet<>();
-        ontologies.add(m.loadOntologyFromOntologyDocument(IRI.create(new File("University0_0.owl"))));
-        ontologies.add(m.loadOntologyFromOntologyDocument(IRI.create(new File("univ-bench.owl"))));
+        Set<OWLOntology> ontologies = new HashSet<>();
+        ontologies = m.getImportsClosure(m.loadOntology(IRI.create(new File("University0_0.owl"))));
         OWLOntology o = m.createOntology(IRI.generateDocumentIRI(), ontologies);
 //        model = new Reasoner.ReasonerFactory().createReasoner(o);
         model = new PelletReasoner(o, BufferingMode.BUFFERING);
@@ -245,6 +262,7 @@ public class MainWindow extends javax.swing.JFrame {
         });
         context.updateContext();
         contextTable.setModel(new ContextDataModel(context));
+        contextTable.setDefaultRenderer(Object.class, new PODCellRenderer());
         Enumeration<TableColumn> e = contextTable.getColumnModel().getColumns();
         while (e.hasMoreElements()) {
             e.nextElement().setHeaderRenderer(new VerticalTableHeaderCellRenderer());

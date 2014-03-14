@@ -114,7 +114,7 @@ public class PartialContext {
     }
 
     public void updateContext() {
-        model.precomputeInferences(InferenceType.CLASS_ASSERTIONS, InferenceType.CLASS_HIERARCHY);
+        model.precomputeInferences(InferenceType.CLASS_ASSERTIONS, InferenceType.CLASS_HIERARCHY, InferenceType.OBJECT_PROPERTY_ASSERTIONS, InferenceType.OBJECT_PROPERTY_HIERARCHY);
         Map<OWLNamedIndividual, SubsetOfAttributes> p = new HashMap<>();
         Map<OWLNamedIndividual, SubsetOfAttributes> n = new HashMap<>();
         Set<OWLNamedIndividual> individuals = model.getRootOntology().getIndividualsInSignature(true);
