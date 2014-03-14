@@ -189,6 +189,13 @@ public class MainWindow extends javax.swing.JFrame {
         }
 
         private void ask(final Implication impl) {
+            final Map<String, Double> features = getFeatures(impl);
+            double clResult = classifier.classify(features);
+            highlightButton(clResult);
+            features.put("classifier", clResult);
+            synchronized (lock) {
+                lastFeatures = features;
+            }
             EventQueue.invokeLater(new Runnable() {
                 @Override
                 public void run() {
