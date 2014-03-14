@@ -206,15 +206,16 @@ public class MainWindow extends javax.swing.JFrame {
         }
 
         private void ask(final Implication impl) {
+            final Map<String, Double> features = getFeatures(impl);
+            double clResult = classifier.classify(features);
+            highlightButton(clResult);
+            features.put("classifier", clResult);
+            synchronized (lock) {
+                lastFeatures = features;
+            }
             EventQueue.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    ((ContextDataModel) contextTable.getModel()).setCurrentImplication(currentImplication);
-                    Map<String, Double> features = getFeatures(impl);
-                    double clResult = classifier.classify(features);
-                    highlightButton(clResult);
-                    features.put("classifier", clResult);
-                    lastFeatures = features;
                     DefaultTableModel model = new DefaultTableModel(new String[]{"feature", "value"}, 0);
                     for (Map.Entry<String, Double> f : features.entrySet()) {
                         model.addRow(new Object[]{f.getKey(), f.getValue()});
