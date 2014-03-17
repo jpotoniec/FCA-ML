@@ -535,7 +535,7 @@ public class MainWindow extends javax.swing.JFrame {
         });
         context.updateContext();
         contextTable.setModel(new ContextDataModel(context));
-        contextTable.setDefaultRenderer(Object.class, new PODCellRenderer());
+        contextTable.setDefaultRenderer(Object.class, new PODCellRenderer(model));
         Enumeration<TableColumn> e = contextTable.getColumnModel().getColumns();
         while (e.hasMoreElements()) {
             e.nextElement().setHeaderRenderer(new VerticalTableHeaderCellRenderer());
