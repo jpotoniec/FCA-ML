@@ -21,9 +21,7 @@ public class ClassAttribute implements Attribute {
 
     public ClassAttribute(OWLClassExpression clazz, OWLReasoner reasoner) {
         this.clazz = clazz;
-//        getReasoner().getInstances(getFactory().getOWLObjectComplementOf(attribute), false).getFlattened()
-//        this.complement = clazz.getObjectComplementOf();
-        this.complement = reasoner.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLObjectComplementOf(clazz);
+        this.complement = clazz.getComplementNNF();
     }
 
     public OWLClassExpression getOntClass() {

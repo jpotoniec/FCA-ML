@@ -21,6 +21,16 @@ public abstract class ReadOnlySubsetOfAttributes implements Iterable<Attribute> 
     protected SetOfAttributes base;
     protected NavigableSet<Integer> indexes;
 
+    public boolean containsAny(ReadOnlySubsetOfAttributes other) {
+        assert this.base == other.base;
+        for (Integer i : other.indexes) {
+            if (indexes.contains(i)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public boolean containsAll(ReadOnlySubsetOfAttributes other) {
         assert this.base == other.base;
         return indexes.containsAll(other.indexes);

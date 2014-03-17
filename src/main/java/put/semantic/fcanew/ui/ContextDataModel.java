@@ -36,10 +36,10 @@ public class ContextDataModel extends AbstractTableModel implements PartialConte
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
         POD pod = context.getPODs().get(rowIndex);
-        if (columnIndex == 0) {
-            return pod.getId().getIRI().getFragment();
+        if (!isAttributeColumn(columnIndex)) {
+            return pod.getId();
         }
-        Attribute a = context.getAttributes().get(columnIndex - 1);
+        Attribute a = context.getAttributes().get(getAttributeIndex(columnIndex));
         if (pod.getPositive().contains(a)) {
             return "+";
         } else if (pod.getNegative().contains(a)) {
@@ -49,12 +49,20 @@ public class ContextDataModel extends AbstractTableModel implements PartialConte
         }
     }
 
+    protected int getAttributeIndex(int column) {
+        return column - 1;
+    }
+
+    protected boolean isAttributeColumn(int column) {
+        return getAttributeIndex(column) >= 0;
+    }
+
     @Override
     public String getColumnName(int column) {
-        if (column == 0) {
+        if (!isAttributeColumn(column)) {
             return "Individual";
         }
-        return context.getAttributes().get(column - 1).toString();
+        return context.getAttributes().get(getAttributeIndex(column)).toString();
     }
 
     @Override
@@ -64,16 +72,16 @@ public class ContextDataModel extends AbstractTableModel implements PartialConte
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return columnIndex > 0;
+        return isAttributeColumn(columnIndex);
     }
 
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-        if (columnIndex == 0) {
+        if (!isAttributeColumn(columnIndex)) {
             throw new IllegalArgumentException();
         }
         POD pod = context.getPODs().get(rowIndex);
-        Attribute a = context.getAttributes().get(columnIndex - 1);
+        Attribute a = context.getAttributes().get(getAttributeIndex(columnIndex));
         System.out.printf("'%s'\n", aValue.toString());
         switch (aValue.toString()) {
             case "+":

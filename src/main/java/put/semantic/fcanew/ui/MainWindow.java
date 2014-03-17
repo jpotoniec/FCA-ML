@@ -2,13 +2,22 @@
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
+ *//*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
  */
 package put.semantic.fcanew.ui;
 
 import com.clarkparsia.pellet.owlapiv3.PelletReasoner;
+import darrylbu.renderer.DefaultTableHeaderCellRenderer;
 import darrylbu.renderer.VerticalTableHeaderCellRenderer;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,8 +31,14 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTable;
 import javax.swing.SwingWorker;
+import javax.swing.plaf.LabelUI;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.IRI;
@@ -44,15 +59,15 @@ import put.semantic.fcanew.PartialContext;
 import put.semantic.fcanew.ProgressListener;
 import put.semantic.fcanew.SimpleSetOfAttributes;
 import put.semantic.fcanew.ml.Classifier;
-import put.semantic.fcanew.ml.LinearRegression;
 import put.semantic.fcanew.ml.WekaClassifier;
 import put.semantic.fcanew.ml.features.FeatureCalculator;
 import put.semantic.fcanew.ml.features.impl.ConsistencyCalculator;
 import put.semantic.fcanew.ml.features.impl.FollowingCalculators;
-import put.semantic.fcanew.ml.features.impl.SatCalculator;
 import put.semantic.fcanew.ml.features.impl.RuleCalculator;
+import put.semantic.fcanew.ml.features.impl.SatCalculator;
 import put.semantic.fcanew.ml.features.values.FeatureValue;
 import put.semantic.fcanew.ml.features.values.NumericFeatureValue;
+import uk.ac.manchester.cs.owlapi.dlsyntax.DLSyntaxObjectRenderer;
 
 /**
  *
@@ -63,6 +78,7 @@ public class MainWindow extends javax.swing.JFrame {
     private PartialContext context;
 
     private List<? extends Attribute> createAttributes() {
+        DLSyntaxObjectRenderer r = new DLSyntaxObjectRenderer();
         final OWLDataFactory f = model.getRootOntology().getOWLOntologyManager().getOWLDataFactory();
         List<ClassAttribute> attributes = new ArrayList<>();
         Set<OWLClass> namedClasses = model.getRootOntology().getClassesInSignature(true);
@@ -84,7 +100,6 @@ public class MainWindow extends javax.swing.JFrame {
             }
         }
         Collections.sort(attributes, new Comparator<ClassAttribute>() {
-
             @Override
             public int compare(ClassAttribute a, ClassAttribute b) {
                 if (model.isEntailed(f.getOWLSubClassOfAxiom(a.getOntClass(), b.getOntClass()))) {
@@ -98,7 +113,6 @@ public class MainWindow extends javax.swing.JFrame {
         });
         return attributes;
     }
-
     private Font normalFont, boldFont;
 
     private void highlightButton(double p) {
@@ -114,7 +128,8 @@ public class MainWindow extends javax.swing.JFrame {
     private class GuiExpert implements Expert {
 
         private final List<? extends FeatureCalculator> calculators = Arrays.asList(
-                new RuleCalculator(),
+                new RuleCalculator(true),
+                new RuleCalculator(false),
                 new FollowingCalculators(),
                 new SatCalculator(),
                 new ConsistencyCalculator());
@@ -179,6 +194,7 @@ public class MainWindow extends javax.swing.JFrame {
         private Map<String, Double> getFeatures(Implication impl) {
             Map<String, Double> result = new TreeMap<>();
             for (FeatureCalculator calc : calculators) {
+                System.err.println(calc.getClass());
                 List<String> names = calc.getNames();
                 List<? extends FeatureValue> values = calc.compute(impl, model, context);
                 for (int i = 0; i < names.size(); ++i) {
@@ -199,11 +215,6 @@ public class MainWindow extends javax.swing.JFrame {
             EventQueue.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    Map<String, Double> features = getFeatures(impl);
-                    double clResult = classifier.classify(features);
-                    highlightButton(clResult);
-                    features.put("classifier", clResult);
-                    lastFeatures = features;
                     DefaultTableModel model = new DefaultTableModel(new String[]{"feature", "value"}, 0);
                     for (Map.Entry<String, Double> f : features.entrySet()) {
                         model.addRow(new Object[]{f.getKey(), f.getValue()});
@@ -228,9 +239,8 @@ public class MainWindow extends javax.swing.JFrame {
         normalFont = acceptButton.getFont();
         boldFont = normalFont.deriveFont(Font.BOLD);
         OWLOntologyManager m = OWLManager.createOWLOntologyManager();
-        HashSet<OWLOntology> ontologies = new HashSet<>();
-        ontologies.add(m.loadOntologyFromOntologyDocument(IRI.create(new File("University0_0.owl"))));
-        ontologies.add(m.loadOntologyFromOntologyDocument(IRI.create(new File("univ-bench.owl"))));
+        Set<OWLOntology> ontologies = new HashSet<>();
+        ontologies = m.getImportsClosure(m.loadOntology(IRI.create(new File("University0_0.owl"))));
         OWLOntology o = m.createOntology(IRI.generateDocumentIRI(), ontologies);
 //        model = new Reasoner.ReasonerFactory().createReasoner(o);
         model = new PelletReasoner(o, BufferingMode.BUFFERING);
@@ -238,7 +248,6 @@ public class MainWindow extends javax.swing.JFrame {
         System.err.println("Model read");
         context = new PartialContext(new SimpleSetOfAttributes(createAttributes()), model);
         context.addProgressListener(new ProgressListener() {
-
             @Override
             public void reset(int max) {
                 updateProgressBar.setMaximum(max);
@@ -251,6 +260,7 @@ public class MainWindow extends javax.swing.JFrame {
         });
         context.updateContext();
         contextTable.setModel(new ContextDataModel(context));
+        contextTable.setDefaultRenderer(Object.class, new PODCellRenderer());
         Enumeration<TableColumn> e = contextTable.getColumnModel().getColumns();
         while (e.hasMoreElements()) {
             e.nextElement().setHeaderRenderer(new VerticalTableHeaderCellRenderer());
@@ -271,7 +281,6 @@ public class MainWindow extends javax.swing.JFrame {
             protected void done() {
                 implicationText.setText("Bye-bye");
             }
-
         }.execute();
     }
 
