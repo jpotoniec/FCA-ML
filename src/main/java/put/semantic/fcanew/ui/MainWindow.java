@@ -71,8 +71,12 @@ public class MainWindow extends javax.swing.JFrame {
         final OWLDataFactory f = model.getRootOntology().getOWLOntologyManager().getOWLDataFactory();
         List<ClassAttribute> attributes = new ArrayList<>();
         Set<OWLClass> namedClasses = model.getRootOntology().getClassesInSignature(true);
-        for (OWLClass clazz : namedClasses) {
-            if (!model.getInstances(clazz, false).isEmpty()) {
+        for (OWLClassExpression clazz : namedClasses) {
+            if (usePositiveNamedClasses.isSelected() && !model.getInstances(clazz, false).isEmpty()) {
+                attributes.add(new ClassAttribute(clazz, model));
+            }
+            clazz = clazz.getComplementNNF();
+            if (useNegativeNamedClasses.isSelected() && !model.getInstances(clazz, false).isEmpty()) {
                 attributes.add(new ClassAttribute(clazz, model));
             }
         }
@@ -80,11 +84,19 @@ public class MainWindow extends javax.swing.JFrame {
         for (OWLObjectProperty property : objectProperties) {
             OWLClassExpression clazz;
             clazz = f.getOWLObjectSomeValuesFrom(property, f.getOWLThing());
-            if (!model.getInstances(clazz, false).isEmpty()) {
+            if (usePositiveDomains.isSelected() && !model.getInstances(clazz, false).isEmpty()) {
+                attributes.add(new ClassAttribute(clazz, model));
+            }
+            clazz = clazz.getComplementNNF();
+            if (useNegativeDomains.isSelected() && !model.getInstances(clazz, false).isEmpty()) {
                 attributes.add(new ClassAttribute(clazz, model));
             }
             clazz = f.getOWLObjectSomeValuesFrom(f.getOWLObjectInverseOf(property), f.getOWLThing());
-            if (!model.getInstances(clazz, false).isEmpty()) {
+            if (usePositiveRanges.isSelected() && !model.getInstances(clazz, false).isEmpty()) {
+                attributes.add(new ClassAttribute(clazz, model));
+            }
+            clazz = clazz.getComplementNNF();
+            if (useNegativeRanges.isSelected() && !model.getInstances(clazz, false).isEmpty()) {
                 attributes.add(new ClassAttribute(clazz, model));
             }
         }
@@ -225,55 +237,10 @@ public class MainWindow extends javax.swing.JFrame {
     /**
      * Creates new form MainWindow
      */
-    public MainWindow() throws OWLOntologyCreationException {
+    public MainWindow() {
         initComponents();
         normalFont = acceptButton.getFont();
         boldFont = normalFont.deriveFont(Font.BOLD);
-        OWLOntologyManager m = OWLManager.createOWLOntologyManager();
-        Set<OWLOntology> ontologies = new HashSet<>();
-        ontologies = m.getImportsClosure(m.loadOntology(IRI.create(new File("University0_0.owl"))));
-        OWLOntology o = m.createOntology(IRI.generateDocumentIRI(), ontologies);
-//        model = new Reasoner.ReasonerFactory().createReasoner(o);
-        model = new PelletReasoner(o, BufferingMode.BUFFERING);
-//        model = new JFactFactory().createReasoner(o);
-        System.err.println("Model read");
-        context = new PartialContext(new SimpleSetOfAttributes(createAttributes()), model);
-        context.addProgressListener(new ProgressListener() {
-            @Override
-            public void reset(int max) {
-                updateProgressBar.setMaximum(max);
-            }
-
-            @Override
-            public void update(int status) {
-                updateProgressBar.setValue(status);
-            }
-        });
-        context.updateContext();
-        contextTable.setModel(new ContextDataModel(context));
-        contextTable.setDefaultRenderer(Object.class, new PODCellRenderer());
-        Enumeration<TableColumn> e = contextTable.getColumnModel().getColumns();
-        while (e.hasMoreElements()) {
-            e.nextElement().setHeaderRenderer(new VerticalTableHeaderCellRenderer());
-        }
-//        contextTable.setCellEditor(new DefaultCellEditor(new JComboBox(new Object[]{"+", "-", " "})));
-        guiExpert = new GuiExpert();
-        final FCA fca = new FCA();
-        fca.setContext(context);
-        fca.setExpert(guiExpert);
-        new SwingWorker() {
-            @Override
-            protected Object doInBackground() throws Exception {
-                fca.reset();
-                fca.run();
-                return null;
-            }
-
-            @Override
-            protected void done() {
-                implicationText.setText("Bye-bye");
-            }
-        }.execute();
     }
 
     /**
@@ -286,7 +253,18 @@ public class MainWindow extends javax.swing.JFrame {
     private void initComponents() {
 
         jTabbedPane1 = new javax.swing.JTabbedPane();
-        jSplitPane2 = new javax.swing.JSplitPane();
+        setupTab = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
+        usePositiveNamedClasses = new javax.swing.JCheckBox();
+        useNegativeNamedClasses = new javax.swing.JCheckBox();
+        usePositiveDomains = new javax.swing.JCheckBox();
+        useNegativeDomains = new javax.swing.JCheckBox();
+        usePositiveRanges = new javax.swing.JCheckBox();
+        useNegativeRanges = new javax.swing.JCheckBox();
+        startButton = new javax.swing.JButton();
+        fcaTab = new javax.swing.JSplitPane();
         jSplitPane1 = new javax.swing.JSplitPane();
         jPanel1 = new javax.swing.JPanel();
         implicationText = new javax.swing.JLabel();
@@ -297,13 +275,93 @@ public class MainWindow extends javax.swing.JFrame {
         featuresTable = new javax.swing.JTable();
         jScrollPane1 = new javax.swing.JScrollPane();
         contextTable = new javax.swing.JTable();
-        jPanel2 = new javax.swing.JPanel();
+        classifierTab = new javax.swing.JPanel();
         jScrollPane3 = new javax.swing.JScrollPane();
         learningExamplesTable = new javax.swing.JTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        jSplitPane2.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
+        jLabel1.setText("Named classes");
+
+        jLabel2.setText("Domains");
+
+        jLabel3.setText("Ranges");
+
+        usePositiveNamedClasses.setSelected(true);
+        usePositiveNamedClasses.setText("Positive");
+
+        useNegativeNamedClasses.setText("Negative");
+
+        usePositiveDomains.setSelected(true);
+        usePositiveDomains.setText("Positive");
+
+        useNegativeDomains.setText("Negative");
+
+        usePositiveRanges.setSelected(true);
+        usePositiveRanges.setText("Positive");
+
+        useNegativeRanges.setText("Negative");
+
+        startButton.setText("Start");
+        startButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                startButtonActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout setupTabLayout = new javax.swing.GroupLayout(setupTab);
+        setupTab.setLayout(setupTabLayout);
+        setupTabLayout.setHorizontalGroup(
+            setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(setupTabLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel1)
+                    .addComponent(jLabel2)
+                    .addComponent(jLabel3))
+                .addGap(18, 18, 18)
+                .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(startButton)
+                    .addGroup(setupTabLayout.createSequentialGroup()
+                        .addComponent(usePositiveRanges)
+                        .addGap(18, 18, 18)
+                        .addComponent(useNegativeRanges))
+                    .addGroup(setupTabLayout.createSequentialGroup()
+                        .addComponent(usePositiveDomains)
+                        .addGap(18, 18, 18)
+                        .addComponent(useNegativeDomains))
+                    .addGroup(setupTabLayout.createSequentialGroup()
+                        .addComponent(usePositiveNamedClasses)
+                        .addGap(18, 18, 18)
+                        .addComponent(useNegativeNamedClasses)))
+                .addContainerGap(771, Short.MAX_VALUE))
+        );
+        setupTabLayout.setVerticalGroup(
+            setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(setupTabLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(usePositiveNamedClasses)
+                    .addComponent(useNegativeNamedClasses))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel2)
+                    .addComponent(usePositiveDomains)
+                    .addComponent(useNegativeDomains))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel3)
+                    .addComponent(usePositiveRanges)
+                    .addComponent(useNegativeRanges))
+                .addGap(18, 18, 18)
+                .addComponent(startButton)
+                .addContainerGap(698, Short.MAX_VALUE))
+        );
+
+        jTabbedPane1.addTab("Setup", setupTab);
+
+        fcaTab.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
 
         jSplitPane1.setDividerLocation(730);
 
@@ -370,7 +428,7 @@ public class MainWindow extends javax.swing.JFrame {
 
         jSplitPane1.setRightComponent(jScrollPane2);
 
-        jSplitPane2.setTopComponent(jSplitPane1);
+        fcaTab.setTopComponent(jSplitPane1);
 
         contextTable.setAutoCreateRowSorter(true);
         contextTable.setModel(new javax.swing.table.DefaultTableModel(
@@ -386,9 +444,9 @@ public class MainWindow extends javax.swing.JFrame {
         ));
         jScrollPane1.setViewportView(contextTable);
 
-        jSplitPane2.setRightComponent(jScrollPane1);
+        fcaTab.setRightComponent(jScrollPane1);
 
-        jTabbedPane1.addTab("FCA", jSplitPane2);
+        jTabbedPane1.addTab("FCA", fcaTab);
 
         learningExamplesTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -403,24 +461,24 @@ public class MainWindow extends javax.swing.JFrame {
         ));
         jScrollPane3.setViewportView(learningExamplesTable);
 
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
+        javax.swing.GroupLayout classifierTabLayout = new javax.swing.GroupLayout(classifierTab);
+        classifierTab.setLayout(classifierTabLayout);
+        classifierTabLayout.setHorizontalGroup(
+            classifierTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(classifierTabLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 1070, Short.MAX_VALUE)
                 .addContainerGap())
         );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
+        classifierTabLayout.setVerticalGroup(
+            classifierTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(classifierTabLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 802, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
-        jTabbedPane1.addTab("Classifier", jPanel2);
+        jTabbedPane1.addTab("Classifier", classifierTab);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -449,6 +507,61 @@ public class MainWindow extends javax.swing.JFrame {
     private void rejectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rejectButtonActionPerformed
         guiExpert.reject();
     }//GEN-LAST:event_rejectButtonActionPerformed
+
+    private void startButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startButtonActionPerformed
+        OWLOntologyManager m = OWLManager.createOWLOntologyManager();
+        Set<OWLOntology> ontologies = new HashSet<>();
+        try {
+            ontologies = m.getImportsClosure(m.loadOntology(IRI.create(new File("University0_0.owl"))));
+            OWLOntology o = m.createOntology(IRI.generateDocumentIRI(), ontologies);
+            //        model = new Reasoner.ReasonerFactory().createReasoner(o);
+            model = new PelletReasoner(o, BufferingMode.BUFFERING);
+//        model = new JFactFactory().createReasoner(o);
+        } catch (OWLOntologyCreationException ex) {
+            throw new RuntimeException(ex);
+        }
+        System.err.println("Model read");
+        context = new PartialContext(new SimpleSetOfAttributes(createAttributes()), model);
+        context.addProgressListener(new ProgressListener() {
+            @Override
+            public void reset(int max) {
+                updateProgressBar.setMaximum(max);
+            }
+
+            @Override
+            public void update(int status) {
+                updateProgressBar.setValue(status);
+            }
+        });
+        context.updateContext();
+        contextTable.setModel(new ContextDataModel(context));
+        contextTable.setDefaultRenderer(Object.class, new PODCellRenderer());
+        Enumeration<TableColumn> e = contextTable.getColumnModel().getColumns();
+        while (e.hasMoreElements()) {
+            e.nextElement().setHeaderRenderer(new VerticalTableHeaderCellRenderer());
+        }
+//        contextTable.setCellEditor(new DefaultCellEditor(new JComboBox(new Object[]{"+", "-", " "})));
+        guiExpert = new GuiExpert();
+        final FCA fca = new FCA();
+        fca.setContext(context);
+        fca.setExpert(guiExpert);
+        new SwingWorker() {
+            @Override
+            protected Object doInBackground() throws Exception {
+                fca.reset();
+                fca.run();
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                implicationText.setText("Bye-bye");
+            }
+        }.execute();
+        jTabbedPane1.setEnabledAt(jTabbedPane1.indexOfComponent(setupTab), false);
+        jTabbedPane1.setEnabledAt(jTabbedPane1.indexOfComponent(fcaTab), true);
+        jTabbedPane1.setSelectedComponent(fcaTab);
+    }//GEN-LAST:event_startButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -480,30 +593,36 @@ public class MainWindow extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                try {
-                    new MainWindow().setVisible(true);
-                } catch (OWLOntologyCreationException ex) {
-                    Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
-                    System.exit(0);
-                }
+                new MainWindow().setVisible(true);
             }
         });
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton acceptButton;
+    private javax.swing.JPanel classifierTab;
     private javax.swing.JTable contextTable;
+    private javax.swing.JSplitPane fcaTab;
     private javax.swing.JTable featuresTable;
     private javax.swing.JLabel implicationText;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JSplitPane jSplitPane1;
-    private javax.swing.JSplitPane jSplitPane2;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable learningExamplesTable;
     private javax.swing.JButton rejectButton;
+    private javax.swing.JPanel setupTab;
+    private javax.swing.JButton startButton;
     private javax.swing.JProgressBar updateProgressBar;
+    private javax.swing.JCheckBox useNegativeDomains;
+    private javax.swing.JCheckBox useNegativeNamedClasses;
+    private javax.swing.JCheckBox useNegativeRanges;
+    private javax.swing.JCheckBox usePositiveDomains;
+    private javax.swing.JCheckBox usePositiveNamedClasses;
+    private javax.swing.JCheckBox usePositiveRanges;
     // End of variables declaration//GEN-END:variables
 }
