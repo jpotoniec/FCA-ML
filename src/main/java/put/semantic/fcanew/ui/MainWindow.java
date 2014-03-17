@@ -215,6 +215,7 @@ public class MainWindow extends javax.swing.JFrame {
             EventQueue.invokeLater(new Runnable() {
                 @Override
                 public void run() {
+                    ((ContextDataModel) contextTable.getModel()).setCurrentImplication(impl);
                     DefaultTableModel model = new DefaultTableModel(new String[]{"feature", "value"}, 0);
                     for (Map.Entry<String, Double> f : features.entrySet()) {
                         model.addRow(new Object[]{f.getKey(), f.getValue()});
