@@ -100,7 +100,6 @@ public class MainWindow extends javax.swing.JFrame {
             }
         }
         Collections.sort(attributes, new Comparator<ClassAttribute>() {
-
             @Override
             public int compare(ClassAttribute a, ClassAttribute b) {
                 if (model.isEntailed(f.getOWLSubClassOfAxiom(a.getOntClass(), b.getOntClass()))) {
@@ -114,7 +113,6 @@ public class MainWindow extends javax.swing.JFrame {
         });
         return attributes;
     }
-
     private Font normalFont, boldFont;
 
     private void highlightButton(double p) {
@@ -133,8 +131,8 @@ public class MainWindow extends javax.swing.JFrame {
                 new RuleCalculator(true),
                 new RuleCalculator(false),
                 new FollowingCalculators(),
-                new SatCalculator(),
-                new ConsistencyCalculator());
+                new SatCalculator()/*,
+                new ConsistencyCalculator()*/);
         private final Object lock = new Object();
         private Decision dec;
         private Map<String, Double> lastFeatures;
@@ -196,6 +194,7 @@ public class MainWindow extends javax.swing.JFrame {
         private Map<String, Double> getFeatures(Implication impl) {
             Map<String, Double> result = new TreeMap<>();
             for (FeatureCalculator calc : calculators) {
+                System.err.println(calc.getClass());
                 List<String> names = calc.getNames();
                 List<? extends FeatureValue> values = calc.compute(impl, model, context);
                 for (int i = 0; i < names.size(); ++i) {
@@ -207,6 +206,7 @@ public class MainWindow extends javax.swing.JFrame {
 
         private void ask(final Implication impl) {
             final Map<String, Double> features = getFeatures(impl);
+            System.err.println("Features done");
             double clResult = classifier.classify(features);
             highlightButton(clResult);
             features.put("classifier", clResult);
@@ -249,7 +249,6 @@ public class MainWindow extends javax.swing.JFrame {
         System.err.println("Model read");
         context = new PartialContext(new SimpleSetOfAttributes(createAttributes()), model);
         context.addProgressListener(new ProgressListener() {
-
             @Override
             public void reset(int max) {
                 updateProgressBar.setMaximum(max);
@@ -283,7 +282,6 @@ public class MainWindow extends javax.swing.JFrame {
             protected void done() {
                 implicationText.setText("Bye-bye");
             }
-
         }.execute();
     }
 

@@ -28,23 +28,23 @@ public class PODCellRenderer extends DefaultTableCellRenderer {
             value = iri.getFragment();
             toolTip = iri.toString();
             ContextDataModel model = (ContextDataModel) table.getModel();
-            ContextDataModel.PODState state = model.getState((OWLNamedIndividual) value);
-            switch (state) {
-                case IN_PREMISE:
-                    System.err.println(iri);
-                    c = Color.RED;
-                    break;
-                case IN_CONCLUSION:
-                    c = Color.GREEN;
-                    break;
-                case IN_BOTH:
-                    c = Color.ORANGE;
-                    break;
-            }
+//            ContextDataModel.PODState state = model.getState((OWLNamedIndividual) value);
+//            switch (state) {
+//                case IN_PREMISE:
+//                    System.err.println(iri);
+//                    c = Color.RED;
+//                    break;
+//                case IN_CONCLUSION:
+//                    c = Color.GREEN;
+//                    break;
+//                case IN_BOTH:
+//                    c = Color.ORANGE;
+//                    break;
+//            }
         }
         JLabel result = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
         result.setToolTipText(toolTip);
-//        System.err.printf("(%d,%d)->%s\n", row, column, c);        
+//        System.err.printf("(%d,%d)->%s\n", row, column, c);
         result.setForeground(c);
         return result;
     }

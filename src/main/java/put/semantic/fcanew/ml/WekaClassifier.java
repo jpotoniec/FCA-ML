@@ -6,10 +6,12 @@
 package put.semantic.fcanew.ml;
 
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.lang.StringUtils;
 import weka.classifiers.rules.JRip;
 import weka.core.Attribute;
 import weka.core.FastVector;
@@ -63,9 +65,15 @@ public class WekaClassifier extends put.semantic.fcanew.ml.AbstractClassifier {
 
     @Override
     public void updateModel() {
+        justification = "";
         try {
             jrip.buildClassifier(instances);
             justification = jrip.toString();
+            justification += StringUtils.join(this.attributes, " ") + "\n";
+            Enumeration i = instances.enumerateInstances();
+            while (i.hasMoreElements()) {
+                justification += i.nextElement().toString() + "\n";
+            }
         } catch (Exception ex) {
             Logger.getLogger(WekaClassifier.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -74,12 +82,11 @@ public class WekaClassifier extends put.semantic.fcanew.ml.AbstractClassifier {
     @Override
     public double classify(Map<String, Double> featuresMap) {
         try {
-            Instance i = makeInstance(featuresMap);            
+            Instance i = makeInstance(featuresMap);
             return jrip.distributionForInstance(i)[1];
         } catch (Exception ex) {
             Logger.getLogger(WekaClassifier.class.getName()).log(Level.SEVERE, null, ex);
             return Double.NaN;
         }
     }
-
 }

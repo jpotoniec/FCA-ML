@@ -60,13 +60,16 @@ public class RuleCalculator extends AbstractFeatureCalculator {
         OWLClassExpression pc = model.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLObjectIntersectionOf(p, c);
         OWLClassExpression pnc = model.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLObjectIntersectionOf(p, c.getObjectComplementOf());
         double z = support(c);
+        System.err.println("z="+z);
         double y = support(p);
+        System.err.println("y="+y);
         double x;
         if (owa) {
             x = support(pnc);
         } else {
             x = y - support(pc);
         }
+        System.err.println("x="+x);
         return transform(y - x,
                 y,
                 z,
