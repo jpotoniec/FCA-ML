@@ -6,26 +6,48 @@
 package put.semantic.fcanew.ml;
 
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.lang.StringUtils;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableModel;
 import weka.classifiers.rules.JRip;
 import weka.core.Attribute;
 import weka.core.FastVector;
 import weka.core.Instance;
 import weka.core.Instances;
 
-/**
- *
- * @author smaug
- */
 public class WekaClassifier extends put.semantic.fcanew.ml.AbstractClassifier {
+
+    private class InstancesTableModel extends AbstractTableModel {
+
+        @Override
+        public int getRowCount() {
+            return instances.numInstances();
+        }
+
+        @Override
+        public int getColumnCount() {
+            return attributes.size();
+        }
+
+        @Override
+        public Object getValueAt(int rowIndex, int columnIndex) {
+            Instance i = instances.instance(rowIndex);
+            return i.toString(columnIndex);
+        }
+
+        @Override
+        public String getColumnName(int column) {
+            return instances.attribute(column).name();
+        }
+
+    }
 
     private JRip jrip = new JRip();
     private Instances instances;
+    private InstancesTableModel tableModel = new InstancesTableModel();
     private static final FastVector classes;
 
     static {
@@ -48,6 +70,7 @@ public class WekaClassifier extends put.semantic.fcanew.ml.AbstractClassifier {
         attrs.addElement(classAttr);
         instances = new Instances("data", attrs, 0);
         instances.setClass(classAttr);
+        tableModel.fireTableStructureChanged();
     }
 
     protected Instance makeInstance(Map<String, Double> features) {
@@ -61,6 +84,7 @@ public class WekaClassifier extends put.semantic.fcanew.ml.AbstractClassifier {
         Instance i = makeInstance(features);
         i.setClassValue(classes.elementAt(accept ? 1 : 0).toString());
         instances.add(i);
+        tableModel.fireTableRowsInserted(instances.numInstances() - 1, instances.numInstances() - 1);
     }
 
     @Override
@@ -69,11 +93,6 @@ public class WekaClassifier extends put.semantic.fcanew.ml.AbstractClassifier {
         try {
             jrip.buildClassifier(instances);
             justification = jrip.toString();
-            justification += StringUtils.join(this.attributes, " ") + "\n";
-            Enumeration i = instances.enumerateInstances();
-            while (i.hasMoreElements()) {
-                justification += i.nextElement().toString() + "\n";
-            }
         } catch (Exception ex) {
             Logger.getLogger(WekaClassifier.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -88,5 +107,10 @@ public class WekaClassifier extends put.semantic.fcanew.ml.AbstractClassifier {
             Logger.getLogger(WekaClassifier.class.getName()).log(Level.SEVERE, null, ex);
             return Double.NaN;
         }
+    }
+
+    @Override
+    public TableModel getExamplesTableModel() {
+        return tableModel;
     }
 }

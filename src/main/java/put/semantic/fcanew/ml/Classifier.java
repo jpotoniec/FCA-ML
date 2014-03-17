@@ -7,6 +7,7 @@ package put.semantic.fcanew.ml;
 
 import java.util.List;
 import java.util.Map;
+import javax.swing.table.TableModel;
 
 public interface Classifier {
 
@@ -21,4 +22,6 @@ public interface Classifier {
     public void setup(List<String> attributes);
 
     public void setup(String... attributes);
+
+    public TableModel getExamplesTableModel();
 }

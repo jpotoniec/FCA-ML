@@ -10,14 +10,9 @@
 package put.semantic.fcanew.ui;
 
 import com.clarkparsia.pellet.owlapiv3.PelletReasoner;
-import darrylbu.renderer.DefaultTableHeaderCellRenderer;
 import darrylbu.renderer.VerticalTableHeaderCellRenderer;
-import java.awt.Color;
-import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,14 +26,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTable;
 import javax.swing.SwingWorker;
-import javax.swing.plaf.LabelUI;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.IRI;
@@ -147,6 +136,7 @@ public class MainWindow extends javax.swing.JFrame {
                 features.addAll(calc.getNames());
             }
             classifier.setup(features.toArray(new String[0]));
+            learningExamplesTable.setModel(classifier.getExamplesTableModel());
         }
 
         private void setEnabled(boolean enabled) {
@@ -229,7 +219,7 @@ public class MainWindow extends javax.swing.JFrame {
             });
         }
     }
-    private GuiExpert guiExpert = new GuiExpert();
+    private GuiExpert guiExpert;
     private OWLReasoner model;
 
     /**
@@ -267,6 +257,7 @@ public class MainWindow extends javax.swing.JFrame {
             e.nextElement().setHeaderRenderer(new VerticalTableHeaderCellRenderer());
         }
 //        contextTable.setCellEditor(new DefaultCellEditor(new JComboBox(new Object[]{"+", "-", " "})));
+        guiExpert = new GuiExpert();
         final FCA fca = new FCA();
         fca.setContext(context);
         fca.setExpert(guiExpert);
@@ -294,6 +285,7 @@ public class MainWindow extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jTabbedPane1 = new javax.swing.JTabbedPane();
         jSplitPane2 = new javax.swing.JSplitPane();
         jSplitPane1 = new javax.swing.JSplitPane();
         jPanel1 = new javax.swing.JPanel();
@@ -305,6 +297,9 @@ public class MainWindow extends javax.swing.JFrame {
         featuresTable = new javax.swing.JTable();
         jScrollPane1 = new javax.swing.JScrollPane();
         contextTable = new javax.swing.JTable();
+        jPanel2 = new javax.swing.JPanel();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        learningExamplesTable = new javax.swing.JTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -341,7 +336,7 @@ public class MainWindow extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(rejectButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(updateProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, 522, Short.MAX_VALUE)))
+                        .addComponent(updateProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, 10, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -393,20 +388,54 @@ public class MainWindow extends javax.swing.JFrame {
 
         jSplitPane2.setRightComponent(jScrollPane1);
 
+        jTabbedPane1.addTab("FCA", jSplitPane2);
+
+        learningExamplesTable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null}
+            },
+            new String [] {
+                "Title 1", "Title 2", "Title 3", "Title 4"
+            }
+        ));
+        jScrollPane3.setViewportView(learningExamplesTable);
+
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 1070, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 802, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+
+        jTabbedPane1.addTab("Classifier", jPanel2);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jSplitPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 1099, Short.MAX_VALUE)
+                .addComponent(jTabbedPane1)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+            .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jSplitPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 853, Short.MAX_VALUE)
+                .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 853, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -466,10 +495,14 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JTable featuresTable;
     private javax.swing.JLabel implicationText;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JSplitPane jSplitPane2;
+    private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JTable learningExamplesTable;
     private javax.swing.JButton rejectButton;
     private javax.swing.JProgressBar updateProgressBar;
     // End of variables declaration//GEN-END:variables
