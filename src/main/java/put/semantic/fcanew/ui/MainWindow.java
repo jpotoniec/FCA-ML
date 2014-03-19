@@ -26,17 +26,24 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
+import javax.swing.RowFilter;
 import javax.swing.SwingWorker;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.OWLAnnotation;
+import org.semanticweb.owlapi.model.OWLAnnotationProperty;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLDataFactory;
+import org.semanticweb.owlapi.model.OWLLiteral;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLObjectProperty;
 import org.semanticweb.owlapi.model.OWLOntology;
@@ -46,6 +53,7 @@ import org.semanticweb.owlapi.reasoner.BufferingMode;
 import org.semanticweb.owlapi.reasoner.Node;
 import org.semanticweb.owlapi.reasoner.NodeSet;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
+import org.semanticweb.owlapi.vocab.OWLRDFVocabulary;
 import put.semantic.fcanew.Attribute;
 import put.semantic.fcanew.Expert;
 import put.semantic.fcanew.FCA;
@@ -287,6 +295,10 @@ public class MainWindow extends javax.swing.JFrame {
         rejectButton = new javax.swing.JButton();
         updateProgressBar = new javax.swing.JProgressBar();
         addNewButton = new javax.swing.JButton();
+        jLabel4 = new javax.swing.JLabel();
+        filterText = new javax.swing.JTextField();
+        resetFilter = new javax.swing.JButton();
+        applyFilter = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         featuresTable = new javax.swing.JTable();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -377,6 +389,7 @@ public class MainWindow extends javax.swing.JFrame {
 
         jTabbedPane1.addTab("Setup", setupTab);
 
+        fcaTab.setDividerLocation(150);
         fcaTab.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
 
         jSplitPane1.setDividerLocation(730);
@@ -404,6 +417,28 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
 
+        jLabel4.setText("Filter:");
+
+        filterText.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                applyFilterActionPerformed(evt);
+            }
+        });
+
+        resetFilter.setText("Reset");
+        resetFilter.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                resetFilterActionPerformed(evt);
+            }
+        });
+
+        applyFilter.setText("Apply");
+        applyFilter.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                applyFilterActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -412,16 +447,23 @@ public class MainWindow extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(implicationText, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addContainerGap())
+                        .addComponent(jLabel4)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(filterText)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(applyFilter)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(resetFilter))
+                    .addComponent(implicationText, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(acceptButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(rejectButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(updateProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, 427, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(addNewButton))))
+                        .addComponent(updateProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, 415, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(addNewButton)))
+                .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -435,7 +477,13 @@ public class MainWindow extends javax.swing.JFrame {
                         .addComponent(rejectButton))
                     .addComponent(updateProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(addNewButton))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 46, Short.MAX_VALUE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel4)
+                    .addComponent(filterText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(resetFilter)
+                    .addComponent(applyFilter))
+                .addContainerGap())
         );
 
         jSplitPane1.setLeftComponent(jPanel1);
@@ -561,6 +609,7 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
         context.updateContext();
+        contextTable.setRowSorter(new TableRowSorter<>());
         contextTable.setModel(new ContextDataModel(context));
         contextTable.setDefaultRenderer(Object.class, new PODCellRenderer(model));
         Enumeration<TableColumn> e = contextTable.getColumnModel().getColumns();
@@ -609,6 +658,51 @@ public class MainWindow extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_addNewButtonActionPerformed
 
+    private List<String> getPossibleLabels(OWLNamedIndividual ind) {
+        OWLAnnotationProperty rdfsLabel = model.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLAnnotationProperty(OWLRDFVocabulary.RDFS_LABEL.getIRI());
+        List<String> result = new ArrayList<>();
+        for (OWLAnnotation ann : ind.getAnnotations(model.getRootOntology(), rdfsLabel)) {
+            if (ann.getValue() instanceof OWLLiteral) {
+                OWLLiteral literal = (OWLLiteral) ann.getValue();
+                if (!literal.getLiteral().isEmpty()) {
+                    result.add(literal.getLiteral());
+                }
+            }
+        }
+        IRI iri = ind.getIRI();
+        result.add(iri.toString());
+        return result;
+    }
+
+    private void applyFilterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_applyFilterActionPerformed
+        try {
+            final Pattern p = Pattern.compile(filterText.getText(), Pattern.CASE_INSENSITIVE);
+            RowFilter<ContextDataModel, Object> rf = new RowFilter<ContextDataModel, Object>() {
+
+                @Override
+                public boolean include(RowFilter.Entry<? extends ContextDataModel, ? extends Object> entry) {
+                    Object id = entry.getValue(0);
+                    if (!(id instanceof OWLNamedIndividual)) {
+                        return true;
+                    }
+                    for (String s : getPossibleLabels((OWLNamedIndividual) id)) {
+                        if (p.matcher(s).find()) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            };
+            ((TableRowSorter) contextTable.getRowSorter()).setRowFilter(rf);
+        } catch (java.util.regex.PatternSyntaxException e) {
+            return;
+        }
+    }//GEN-LAST:event_applyFilterActionPerformed
+
+    private void resetFilterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resetFilterActionPerformed
+        ((TableRowSorter) contextTable.getRowSorter()).setRowFilter(null);
+    }//GEN-LAST:event_resetFilterActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -646,14 +740,17 @@ public class MainWindow extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton acceptButton;
     private javax.swing.JButton addNewButton;
+    private javax.swing.JButton applyFilter;
     private javax.swing.JPanel classifierTab;
     private javax.swing.JTable contextTable;
     private javax.swing.JSplitPane fcaTab;
     private javax.swing.JTable featuresTable;
+    private javax.swing.JTextField filterText;
     private javax.swing.JLabel implicationText;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
@@ -662,6 +759,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable learningExamplesTable;
     private javax.swing.JButton rejectButton;
+    private javax.swing.JButton resetFilter;
     private javax.swing.JPanel setupTab;
     private javax.swing.JButton startButton;
     private javax.swing.JProgressBar updateProgressBar;
