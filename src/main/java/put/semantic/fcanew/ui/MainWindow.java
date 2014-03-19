@@ -39,6 +39,8 @@ import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.reasoner.BufferingMode;
+import org.semanticweb.owlapi.reasoner.Node;
+import org.semanticweb.owlapi.reasoner.NodeSet;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import put.semantic.fcanew.Attribute;
 import put.semantic.fcanew.Expert;
@@ -70,14 +72,17 @@ public class MainWindow extends javax.swing.JFrame {
         DLSyntaxObjectRenderer r = new DLSyntaxObjectRenderer();
         final OWLDataFactory f = model.getRootOntology().getOWLOntologyManager().getOWLDataFactory();
         List<ClassAttribute> attributes = new ArrayList<>();
-        Set<OWLClass> namedClasses = model.getRootOntology().getClassesInSignature(true);
-        for (OWLClassExpression clazz : namedClasses) {
-            if (usePositiveNamedClasses.isSelected() && !model.getInstances(clazz, false).isEmpty()) {
-                attributes.add(new ClassAttribute(clazz, model));
-            }
-            clazz = clazz.getComplementNNF();
-            if (useNegativeNamedClasses.isSelected() && !model.getInstances(clazz, false).isEmpty()) {
-                attributes.add(new ClassAttribute(clazz, model));
+        NodeSet<OWLClass> namedClasses = model.getSubClasses(model.getTopClassNode().getRepresentativeElement(), false);
+        for (Node<OWLClass> node : namedClasses) {
+            OWLClassExpression clazz = node.getRepresentativeElement();
+            if (!model.getInstances(clazz, false).isEmpty()) {
+                if (usePositiveNamedClasses.isSelected()) {
+                    attributes.add(new ClassAttribute(clazz, model));
+                }
+                clazz = clazz.getComplementNNF();
+                if (useNegativeNamedClasses.isSelected()) {
+                    attributes.add(new ClassAttribute(clazz, model));
+                }
             }
         }
         Set<OWLObjectProperty> objectProperties = model.getRootOntology().getObjectPropertiesInSignature(true);
