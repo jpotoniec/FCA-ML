@@ -26,6 +26,9 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.DefaultCellEditor;
+import javax.swing.JComboBox;
+import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
@@ -542,10 +545,12 @@ public class MainWindow extends javax.swing.JFrame {
         contextTable.setModel(new ContextDataModel(context));
         contextTable.setDefaultRenderer(Object.class, new PODCellRenderer(model));
         Enumeration<TableColumn> e = contextTable.getColumnModel().getColumns();
+        JComboBox comboBox = new JComboBox(new Object[]{"+", "-", " "});
         while (e.hasMoreElements()) {
-            e.nextElement().setHeaderRenderer(new VerticalTableHeaderCellRenderer());
+            TableColumn col = e.nextElement();
+            col.setHeaderRenderer(new VerticalTableHeaderCellRenderer());
+            col.setCellEditor(new DefaultCellEditor(comboBox));
         }
-//        contextTable.setCellEditor(new DefaultCellEditor(new JComboBox(new Object[]{"+", "-", " "})));
         guiExpert = new GuiExpert();
         final FCA fca = new FCA();
         fca.setContext(context);
