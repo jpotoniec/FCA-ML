@@ -37,6 +37,7 @@ import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLDataFactory;
+import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLObjectProperty;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
@@ -225,6 +226,7 @@ public class MainWindow extends javax.swing.JFrame {
             EventQueue.invokeLater(new Runnable() {
                 @Override
                 public void run() {
+                    currentImplication = impl;
                     ((ContextDataModel) contextTable.getModel()).setCurrentImplication(impl);
                     DefaultTableModel model = new DefaultTableModel(new String[]{"feature", "value"}, 0);
                     for (Map.Entry<String, Double> f : features.entrySet()) {
@@ -238,6 +240,11 @@ public class MainWindow extends javax.swing.JFrame {
                 }
             });
         }
+
+        public Implication getCurrentImplication() {
+            return currentImplication;
+        }
+
     }
     private GuiExpert guiExpert;
     private OWLReasoner model;
@@ -279,6 +286,7 @@ public class MainWindow extends javax.swing.JFrame {
         acceptButton = new javax.swing.JButton();
         rejectButton = new javax.swing.JButton();
         updateProgressBar = new javax.swing.JProgressBar();
+        addNewButton = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         featuresTable = new javax.swing.JTable();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -389,6 +397,13 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
 
+        addNewButton.setText("Add new");
+        addNewButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addNewButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -396,14 +411,17 @@ public class MainWindow extends javax.swing.JFrame {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(implicationText, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(implicationText, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addContainerGap())
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(acceptButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(rejectButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(updateProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, 10, Short.MAX_VALUE)))
-                .addContainerGap())
+                        .addComponent(updateProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, 427, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(addNewButton))))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -415,7 +433,8 @@ public class MainWindow extends javax.swing.JFrame {
                     .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(acceptButton)
                         .addComponent(rejectButton))
-                    .addComponent(updateProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(updateProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(addNewButton))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -573,6 +592,23 @@ public class MainWindow extends javax.swing.JFrame {
         jTabbedPane1.setSelectedComponent(fcaTab);
     }//GEN-LAST:event_startButtonActionPerformed
 
+    private void addNewButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addNewButtonActionPerformed
+        String uri = JOptionPane.showInputDialog(this, "Enter individual URI");
+        if (uri != null) {
+            OWLOntologyManager m = model.getRootOntology().getOWLOntologyManager();
+            OWLDataFactory f = m.getOWLDataFactory();
+            OWLNamedIndividual ind = f.getOWLNamedIndividual(IRI.create(uri));
+            if (!guiExpert.getCurrentImplication().getPremises().isEmpty()) {
+                for (Attribute a : guiExpert.getCurrentImplication().getPremises()) {
+                    m.addAxiom(model.getRootOntology(), f.getOWLClassAssertionAxiom(((ClassAttribute) a).getOntClass(), ind));
+                }
+            } else {
+                m.addAxiom(model.getRootOntology(), f.getOWLClassAssertionAxiom(model.getTopClassNode().getRepresentativeElement(), ind));
+            }
+            context.updateContext();
+        }
+    }//GEN-LAST:event_addNewButtonActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -609,6 +645,7 @@ public class MainWindow extends javax.swing.JFrame {
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton acceptButton;
+    private javax.swing.JButton addNewButton;
     private javax.swing.JPanel classifierTab;
     private javax.swing.JTable contextTable;
     private javax.swing.JSplitPane fcaTab;

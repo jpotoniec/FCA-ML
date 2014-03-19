@@ -213,16 +213,20 @@
                           <Group type="102" alignment="0" attributes="0">
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="implicationText" max="32767" attributes="0"/>
+                                  <Group type="102" attributes="0">
+                                      <Component id="implicationText" max="32767" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                  </Group>
                                   <Group type="102" attributes="0">
                                       <Component id="acceptButton" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                                       <Component id="rejectButton" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                                      <Component id="updateProgressBar" pref="10" max="32767" attributes="0"/>
+                                      <Component id="updateProgressBar" pref="427" max="32767" attributes="0"/>
+                                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                                      <Component id="addNewButton" min="-2" max="-2" attributes="0"/>
                                   </Group>
                               </Group>
-                              <EmptySpace max="-2" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -238,6 +242,7 @@
                                       <Component id="rejectButton" alignment="3" min="-2" max="-2" attributes="0"/>
                                   </Group>
                                   <Component id="updateProgressBar" min="-2" max="-2" attributes="0"/>
+                                  <Component id="addNewButton" min="-2" max="-2" attributes="0"/>
                               </Group>
                               <EmptySpace max="32767" attributes="0"/>
                           </Group>
@@ -267,6 +272,14 @@
                       </Events>
                     </Component>
                     <Component class="javax.swing.JProgressBar" name="updateProgressBar">
+                    </Component>
+                    <Component class="javax.swing.JButton" name="addNewButton">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Add new"/>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="addNewButtonActionPerformed"/>
+                      </Events>
                     </Component>
                   </SubComponents>
                 </Container>
