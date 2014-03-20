@@ -23,25 +23,24 @@ import put.semantic.fcanew.ml.features.values.NumericFeatureValue;
  */
 public class RuleCalculator extends AbstractFeatureCalculator {
 
-    protected static String getSuffix(boolean owa) {
-        return owa ? " (owa)" : "";
-    }
-
-    protected boolean owa;
     protected OWLReasoner model;
+    protected int size;
 
-    public RuleCalculator(boolean owa) {
-        super("support" + getSuffix(owa),
-                "coverage" + getSuffix(owa),
-                "prevalence" + getSuffix(owa),
-                "recall (local support)" + getSuffix(owa),
-                "lift" + getSuffix(owa)
+    public RuleCalculator() {
+        super(
+                "coverage",
+                "prevalence",
+                "support (cwa)",
+                "support (owa)",
+                "recall (local support) (cwa)",
+                "recall (local support) (owa)",
+                "lift (cwa)",
+                "lift (owa)"
         );
-        this.owa = owa;
     }
 
     protected int size() {
-        return model.getRootOntology().getIndividualsInSignature().size();
+        return size;
     }
 
     protected int size(OWLClassExpression expr) {
@@ -55,26 +54,25 @@ public class RuleCalculator extends AbstractFeatureCalculator {
     @Override
     public List<? extends NumericFeatureValue> compute(Implication impl, OWLReasoner model, PartialContext context) {
         this.model = model;
+        this.size = model.getRootOntology().getIndividualsInSignature().size();
         OWLClassExpression p = impl.getPremises().getClass(model);
         OWLClassExpression c = impl.getConclusions().getClass(model);
         OWLClassExpression pc = model.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLObjectIntersectionOf(p, c);
         OWLClassExpression pnc = model.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLObjectIntersectionOf(p, c.getObjectComplementOf());
         double z = support(c);
-        System.err.println("z="+z);
         double y = support(p);
-        System.err.println("y="+y);
-        double x;
-        if (owa) {
-            x = support(pnc);
-        } else {
-            x = y - support(pc);
-        }
-        System.err.println("x="+x);
-        return transform(y - x,
+        double xowa, xcwa;
+        xowa = support(pnc);
+        xcwa = y - support(pc);
+        return transform(
                 y,
                 z,
-                (y - x) / z,
-                (y - x) / (y * z)
+                y - xcwa,
+                y - xowa,
+                (y - xcwa) / z,
+                (y - xowa) / z,
+                (y - xcwa) / (y * z),
+                (y - xowa) / (y * z)
         );
     }
 

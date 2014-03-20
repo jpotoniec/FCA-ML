@@ -146,8 +146,7 @@ public class MainWindow extends javax.swing.JFrame {
     private class GuiExpert implements Expert {
 
         private final List<? extends FeatureCalculator> calculators = Arrays.asList(
-                new RuleCalculator(true),
-                new RuleCalculator(false),
+                new RuleCalculator(),
                 new FollowingCalculators(),
                 new SatCalculator(),
                 new ConsistencyCalculator());
