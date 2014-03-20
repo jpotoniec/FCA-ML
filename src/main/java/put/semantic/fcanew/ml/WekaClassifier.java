@@ -12,7 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableModel;
-import weka.classifiers.rules.JRip;
+import weka.classifiers.Classifier;
 import weka.core.Attribute;
 import weka.core.FastVector;
 import weka.core.Instance;
@@ -45,8 +45,8 @@ public class WekaClassifier extends put.semantic.fcanew.ml.AbstractClassifier {
 
     }
 
-    private JRip jrip = new JRip();
-    private Instances instances;
+    protected weka.classifiers.Classifier classifier;
+    protected Instances instances;
     private InstancesTableModel tableModel = new InstancesTableModel();
     private static final FastVector classes;
 
@@ -54,6 +54,10 @@ public class WekaClassifier extends put.semantic.fcanew.ml.AbstractClassifier {
         classes = new FastVector(2);
         classes.addElement("reject");
         classes.addElement("accept");
+    }
+
+    public WekaClassifier(Classifier classifier) {
+        this.classifier = classifier;
     }
 
     @Override
@@ -91,8 +95,8 @@ public class WekaClassifier extends put.semantic.fcanew.ml.AbstractClassifier {
     public void updateModel() {
         justification = "";
         try {
-            jrip.buildClassifier(instances);
-            justification = jrip.toString();
+            classifier.buildClassifier(instances);
+            justification = classifier.toString();
         } catch (Exception ex) {
             Logger.getLogger(WekaClassifier.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -102,7 +106,7 @@ public class WekaClassifier extends put.semantic.fcanew.ml.AbstractClassifier {
     public double classify(Map<String, Double> featuresMap) {
         try {
             Instance i = makeInstance(featuresMap);
-            return jrip.distributionForInstance(i)[1];
+            return classifier.distributionForInstance(i)[1];
         } catch (Exception ex) {
             Logger.getLogger(WekaClassifier.class.getName()).log(Level.SEVERE, null, ex);
             return Double.NaN;

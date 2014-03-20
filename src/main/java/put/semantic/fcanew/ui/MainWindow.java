@@ -71,6 +71,7 @@ import put.semantic.fcanew.ml.features.impl.SatCalculator;
 import put.semantic.fcanew.ml.features.values.FeatureValue;
 import put.semantic.fcanew.ml.features.values.NumericFeatureValue;
 import uk.ac.manchester.cs.owlapi.dlsyntax.DLSyntaxObjectRenderer;
+import weka.classifiers.rules.JRip;
 
 /**
  *
@@ -158,7 +159,7 @@ public class MainWindow extends javax.swing.JFrame {
         private Classifier classifier;
 
         public GuiExpert() {
-            classifier = new WekaClassifier();
+            classifier = new WekaClassifier(new JRip());
             List<String> features = new ArrayList<>();
             for (FeatureCalculator calc : calculators) {
                 features.addAll(calc.getNames());
