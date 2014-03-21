@@ -29,9 +29,11 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.RowFilter;
 import javax.swing.SwingWorker;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
@@ -265,6 +267,7 @@ public class MainWindow extends javax.swing.JFrame {
         initComponents();
         normalFont = acceptButton.getFont();
         boldFont = normalFont.deriveFont(Font.BOLD);
+        initFiles();
     }
 
     /**
@@ -291,6 +294,11 @@ public class MainWindow extends javax.swing.JFrame {
         jScrollPane4 = new javax.swing.JScrollPane();
         forcedAttributes = new CheckBoxList<Attribute>();
         start = new javax.swing.JButton();
+        jPanel2 = new javax.swing.JPanel();
+        jScrollPane5 = new javax.swing.JScrollPane();
+        files = new javax.swing.JList();
+        addFile = new javax.swing.JButton();
+        removeFile = new javax.swing.JButton();
         fcaTab = new javax.swing.JSplitPane();
         jSplitPane1 = new javax.swing.JSplitPane();
         jPanel1 = new javax.swing.JPanel();
@@ -357,6 +365,51 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
 
+        jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Files"));
+
+        files.setModel(new FilesListModel());
+        jScrollPane5.setViewportView(files);
+
+        addFile.setText("Add");
+        addFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addFileActionPerformed(evt);
+            }
+        });
+
+        removeFile.setText("Remove");
+        removeFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                removeFileActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 746, Short.MAX_VALUE)
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(addFile)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(removeFile)
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addComponent(jScrollPane5)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(addFile)
+                    .addComponent(removeFile))
+                .addContainerGap())
+        );
+
         javax.swing.GroupLayout setupTabLayout = new javax.swing.GroupLayout(setupTab);
         setupTab.setLayout(setupTabLayout);
         setupTabLayout.setHorizontalGroup(
@@ -387,33 +440,38 @@ public class MainWindow extends javax.swing.JFrame {
                                     .addComponent(usePositiveNamedClasses)
                                     .addGap(18, 18, 18)
                                     .addComponent(useNegativeNamedClasses))))))
-                .addContainerGap(873, Short.MAX_VALUE))
+                .addGap(81, 81, 81)
+                .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
         setupTabLayout.setVerticalGroup(
             setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(setupTabLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1)
-                    .addComponent(usePositiveNamedClasses)
-                    .addComponent(useNegativeNamedClasses))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel2)
-                    .addComponent(usePositiveDomains)
-                    .addComponent(useNegativeDomains))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel3)
-                    .addComponent(usePositiveRanges)
-                    .addComponent(useNegativeRanges))
-                .addGap(18, 18, 18)
-                .addComponent(generateAttributes)
-                .addGap(18, 18, 18)
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(setupTabLayout.createSequentialGroup()
+                        .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel1)
+                            .addComponent(usePositiveNamedClasses)
+                            .addComponent(useNegativeNamedClasses))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel2)
+                            .addComponent(usePositiveDomains)
+                            .addComponent(useNegativeDomains))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel3)
+                            .addComponent(usePositiveRanges)
+                            .addComponent(useNegativeRanges))
+                        .addGap(18, 18, 18)
+                        .addComponent(generateAttributes)
+                        .addGap(20, 20, 20)
+                        .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addGap(18, 18, 18)
                 .addComponent(start)
-                .addContainerGap(498, Short.MAX_VALUE))
+                .addContainerGap(492, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Setup", setupTab);
@@ -616,7 +674,9 @@ public class MainWindow extends javax.swing.JFrame {
         OWLOntologyManager m = OWLManager.createOWLOntologyManager();
         Set<OWLOntology> ontologies = new HashSet<>();
         try {
-            ontologies = m.getImportsClosure(m.loadOntology(IRI.create(new File("University0_0.owl"))));
+            for (File f : ((FilesListModel) files.getModel()).getFiles()) {
+                ontologies.addAll(m.getImportsClosure(m.loadOntology(IRI.create(f))));
+            }
             OWLOntology o = m.createOntology(IRI.generateDocumentIRI(), ontologies);
             //        model = new Reasoner.ReasonerFactory().createReasoner(o);
             model = new PelletReasoner(o, BufferingMode.BUFFERING);
@@ -751,6 +811,28 @@ public class MainWindow extends javax.swing.JFrame {
         jTabbedPane1.setSelectedComponent(fcaTab);
     }//GEN-LAST:event_startActionPerformed
 
+    private JFileChooser fileChooser = null;
+
+    private void initFiles() {
+        fileChooser = new JFileChooser();
+        fileChooser.setFileFilter(new FileNameExtensionFilter(
+                "RDF/OWL", "rdf", "owl", "ttl"));
+        fileChooser.setMultiSelectionEnabled(true);
+    }
+
+    private void addFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addFileActionPerformed
+        assert fileChooser != null;
+        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            ((FilesListModel) files.getModel()).add(fileChooser.getSelectedFiles());
+        }
+    }//GEN-LAST:event_addFileActionPerformed
+
+    private void removeFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeFileActionPerformed
+        for (int i : files.getSelectedIndices()) {
+            ((FilesListModel) files.getModel()).remove(i);
+        }
+    }//GEN-LAST:event_removeFileActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -787,12 +869,14 @@ public class MainWindow extends javax.swing.JFrame {
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton acceptButton;
+    private javax.swing.JButton addFile;
     private javax.swing.JButton addNewButton;
     private javax.swing.JButton applyFilter;
     private javax.swing.JPanel classifierTab;
     private javax.swing.JTable contextTable;
     private javax.swing.JSplitPane fcaTab;
     private javax.swing.JTable featuresTable;
+    private javax.swing.JList files;
     private javax.swing.JTextField filterText;
     private javax.swing.JList forcedAttributes;
     private javax.swing.JButton generateAttributes;
@@ -802,14 +886,17 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
+    private javax.swing.JScrollPane jScrollPane5;
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable learningExamplesTable;
     private javax.swing.JButton rejectButton;
+    private javax.swing.JButton removeFile;
     private javax.swing.JButton resetFilter;
     private javax.swing.JPanel setupTab;
     private javax.swing.JButton start;
