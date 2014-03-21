@@ -36,7 +36,6 @@ import javax.swing.SwingWorker;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
-import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import org.semanticweb.HermiT.Reasoner;
 import org.semanticweb.owlapi.apibinding.OWLManager;
@@ -690,6 +689,7 @@ public class MainWindow extends javax.swing.JFrame {
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
+        contextTable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
         jScrollPane1.setViewportView(contextTable);
 
         fcaTab.setRightComponent(jScrollPane1);
@@ -889,6 +889,9 @@ public class MainWindow extends javax.swing.JFrame {
             TableColumn col = e.nextElement();
             col.setHeaderRenderer(new VerticalTableHeaderCellRenderer());
             col.setCellEditor(new DefaultCellEditor(comboBox));
+            if (col.getModelIndex() >= 1) {
+                col.setPreferredWidth(20);
+            }
         }
         guiExpert = new GuiExpert((Classifier) classifierToUse.getSelectedItem());
         final FCA fca = new FCA();
