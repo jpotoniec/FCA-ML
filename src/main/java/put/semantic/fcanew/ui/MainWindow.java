@@ -38,6 +38,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
+import org.semanticweb.HermiT.Reasoner;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAnnotation;
@@ -72,6 +73,7 @@ import put.semantic.fcanew.ml.features.impl.RuleCalculator;
 import put.semantic.fcanew.ml.features.impl.SatCalculator;
 import put.semantic.fcanew.ml.features.values.FeatureValue;
 import put.semantic.fcanew.ml.features.values.NumericFeatureValue;
+import uk.ac.manchester.cs.jfact.JFactFactory;
 import uk.ac.manchester.cs.owlapi.dlsyntax.DLSyntaxObjectRenderer;
 import weka.classifiers.rules.JRip;
 
@@ -279,6 +281,7 @@ public class MainWindow extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        reasoners = new javax.swing.ButtonGroup();
         jTabbedPane1 = new javax.swing.JTabbedPane();
         setupTab = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
@@ -299,6 +302,10 @@ public class MainWindow extends javax.swing.JFrame {
         files = new javax.swing.JList();
         addFile = new javax.swing.JButton();
         removeFile = new javax.swing.JButton();
+        jPanel3 = new javax.swing.JPanel();
+        usePellet = new javax.swing.JRadioButton();
+        useJFact = new javax.swing.JRadioButton();
+        useHermit = new javax.swing.JRadioButton();
         fcaTab = new javax.swing.JSplitPane();
         jSplitPane1 = new javax.swing.JSplitPane();
         jPanel1 = new javax.swing.JPanel();
@@ -410,6 +417,42 @@ public class MainWindow extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
+        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Reasoner"));
+
+        reasoners.add(usePellet);
+        usePellet.setSelected(true);
+        usePellet.setText("Pellet");
+
+        reasoners.add(useJFact);
+        useJFact.setText("JFact (Fact++)");
+
+        reasoners.add(useHermit);
+        useHermit.setText("HermiT");
+
+        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
+        jPanel3.setLayout(jPanel3Layout);
+        jPanel3Layout.setHorizontalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(usePellet)
+                    .addComponent(useJFact)
+                    .addComponent(useHermit))
+                .addContainerGap(10, Short.MAX_VALUE))
+        );
+        jPanel3Layout.setVerticalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(usePellet)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(useJFact)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(useHermit)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
         javax.swing.GroupLayout setupTabLayout = new javax.swing.GroupLayout(setupTab);
         setupTab.setLayout(setupTabLayout);
         setupTabLayout.setHorizontalGroup(
@@ -441,7 +484,11 @@ public class MainWindow extends javax.swing.JFrame {
                                     .addGap(18, 18, 18)
                                     .addComponent(useNegativeNamedClasses))))))
                 .addGap(81, 81, 81)
-                .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(setupTabLayout.createSequentialGroup()
+                        .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         setupTabLayout.setVerticalGroup(
@@ -470,8 +517,10 @@ public class MainWindow extends javax.swing.JFrame {
                         .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addGap(18, 18, 18)
-                .addComponent(start)
-                .addContainerGap(492, Short.MAX_VALUE))
+                .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(start)
+                    .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(402, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Setup", setupTab);
@@ -678,9 +727,15 @@ public class MainWindow extends javax.swing.JFrame {
                 ontologies.addAll(m.getImportsClosure(m.loadOntology(IRI.create(f))));
             }
             OWLOntology o = m.createOntology(IRI.generateDocumentIRI(), ontologies);
-            //        model = new Reasoner.ReasonerFactory().createReasoner(o);
-            model = new PelletReasoner(o, BufferingMode.BUFFERING);
-//        model = new JFactFactory().createReasoner(o);
+            if (useHermit.isSelected()) {
+                model = new Reasoner.ReasonerFactory().createReasoner(o);
+            } else if (usePellet.isSelected()) {
+                model = new PelletReasoner(o, BufferingMode.BUFFERING);
+            } else if (useJFact.isSelected()) {
+                model = new JFactFactory().createReasoner(o);
+            } else {
+                throw new RuntimeException("Impoosible, no reasoner is selected");
+            }
         } catch (OWLOntologyCreationException ex) {
             throw new RuntimeException(ex);
         }
@@ -887,6 +942,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
@@ -895,15 +951,19 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable learningExamplesTable;
+    private javax.swing.ButtonGroup reasoners;
     private javax.swing.JButton rejectButton;
     private javax.swing.JButton removeFile;
     private javax.swing.JButton resetFilter;
     private javax.swing.JPanel setupTab;
     private javax.swing.JButton start;
     private javax.swing.JProgressBar updateProgressBar;
+    private javax.swing.JRadioButton useHermit;
+    private javax.swing.JRadioButton useJFact;
     private javax.swing.JCheckBox useNegativeDomains;
     private javax.swing.JCheckBox useNegativeNamedClasses;
     private javax.swing.JCheckBox useNegativeRanges;
+    private javax.swing.JRadioButton usePellet;
     private javax.swing.JCheckBox usePositiveDomains;
     private javax.swing.JCheckBox usePositiveNamedClasses;
     private javax.swing.JCheckBox usePositiveRanges;
