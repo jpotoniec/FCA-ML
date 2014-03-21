@@ -45,8 +45,12 @@ public class FCA {
         return null;
     }
 
-    public void reset() {
-        p = new SubsetOfAttributes(context.getAttributes());
+    public void reset(int forcedN) {
+        Integer[] forced = new Integer[forcedN];
+        for (int i = 0; i < forcedN; ++i) {
+            forced[i] = i;
+        }
+        p = new SubsetOfAttributes(context.getAttributes(), forced);
         implications = new SetOfImplications();
         if (bk != null) {
             for (Implication i : bk) {

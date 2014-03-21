@@ -256,6 +256,7 @@ public class MainWindow extends javax.swing.JFrame {
     }
     private GuiExpert guiExpert;
     private OWLReasoner model;
+    private List<? extends Attribute> attributes;
 
     /**
      * Creates new form MainWindow
@@ -286,7 +287,10 @@ public class MainWindow extends javax.swing.JFrame {
         useNegativeDomains = new javax.swing.JCheckBox();
         usePositiveRanges = new javax.swing.JCheckBox();
         useNegativeRanges = new javax.swing.JCheckBox();
-        startButton = new javax.swing.JButton();
+        generateAttributes = new javax.swing.JButton();
+        jScrollPane4 = new javax.swing.JScrollPane();
+        forcedAttributes = new CheckBoxList<Attribute>();
+        start = new javax.swing.JButton();
         fcaTab = new javax.swing.JSplitPane();
         jSplitPane1 = new javax.swing.JSplitPane();
         jPanel1 = new javax.swing.JPanel();
@@ -330,10 +334,26 @@ public class MainWindow extends javax.swing.JFrame {
 
         useNegativeRanges.setText("Negative");
 
-        startButton.setText("Start");
-        startButton.addActionListener(new java.awt.event.ActionListener() {
+        generateAttributes.setText("Generate attributes");
+        generateAttributes.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                startButtonActionPerformed(evt);
+                generateAttributesActionPerformed(evt);
+            }
+        });
+
+        forcedAttributes.setModel(new javax.swing.AbstractListModel() {
+            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
+            public int getSize() { return strings.length; }
+            public Object getElementAt(int i) { return strings[i]; }
+        });
+        forcedAttributes.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        jScrollPane4.setViewportView(forcedAttributes);
+
+        start.setText("Start");
+        start.setEnabled(false);
+        start.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                startActionPerformed(evt);
             }
         });
 
@@ -343,26 +363,31 @@ public class MainWindow extends javax.swing.JFrame {
             setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(setupTabLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel1)
-                    .addComponent(jLabel2)
-                    .addComponent(jLabel3))
-                .addGap(18, 18, 18)
-                .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(startButton)
-                    .addGroup(setupTabLayout.createSequentialGroup()
-                        .addComponent(usePositiveRanges)
-                        .addGap(18, 18, 18)
-                        .addComponent(useNegativeRanges))
-                    .addGroup(setupTabLayout.createSequentialGroup()
-                        .addComponent(usePositiveDomains)
-                        .addGap(18, 18, 18)
-                        .addComponent(useNegativeDomains))
-                    .addGroup(setupTabLayout.createSequentialGroup()
-                        .addComponent(usePositiveNamedClasses)
-                        .addGap(18, 18, 18)
-                        .addComponent(useNegativeNamedClasses)))
-                .addContainerGap(771, Short.MAX_VALUE))
+                .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(start)
+                    .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                        .addComponent(jScrollPane4)
+                        .addGroup(setupTabLayout.createSequentialGroup()
+                            .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(jLabel1)
+                                .addComponent(jLabel2)
+                                .addComponent(jLabel3))
+                            .addGap(18, 18, 18)
+                            .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(generateAttributes)
+                                .addGroup(setupTabLayout.createSequentialGroup()
+                                    .addComponent(usePositiveRanges)
+                                    .addGap(18, 18, 18)
+                                    .addComponent(useNegativeRanges))
+                                .addGroup(setupTabLayout.createSequentialGroup()
+                                    .addComponent(usePositiveDomains)
+                                    .addGap(18, 18, 18)
+                                    .addComponent(useNegativeDomains))
+                                .addGroup(setupTabLayout.createSequentialGroup()
+                                    .addComponent(usePositiveNamedClasses)
+                                    .addGap(18, 18, 18)
+                                    .addComponent(useNegativeNamedClasses))))))
+                .addContainerGap(873, Short.MAX_VALUE))
         );
         setupTabLayout.setVerticalGroup(
             setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -383,8 +408,12 @@ public class MainWindow extends javax.swing.JFrame {
                     .addComponent(usePositiveRanges)
                     .addComponent(useNegativeRanges))
                 .addGap(18, 18, 18)
-                .addComponent(startButton)
-                .addContainerGap(698, Short.MAX_VALUE))
+                .addComponent(generateAttributes)
+                .addGap(18, 18, 18)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(start)
+                .addContainerGap(498, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Setup", setupTab);
@@ -583,7 +612,7 @@ public class MainWindow extends javax.swing.JFrame {
         guiExpert.reject();
     }//GEN-LAST:event_rejectButtonActionPerformed
 
-    private void startButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startButtonActionPerformed
+    private void generateAttributesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generateAttributesActionPerformed
         OWLOntologyManager m = OWLManager.createOWLOntologyManager();
         Set<OWLOntology> ontologies = new HashSet<>();
         try {
@@ -596,50 +625,10 @@ public class MainWindow extends javax.swing.JFrame {
             throw new RuntimeException(ex);
         }
         System.err.println("Model read");
-        context = new PartialContext(new SimpleSetOfAttributes(createAttributes()), model);
-        context.addProgressListener(new ProgressListener() {
-            @Override
-            public void reset(int max) {
-                updateProgressBar.setMaximum(max);
-            }
-
-            @Override
-            public void update(int status) {
-                updateProgressBar.setValue(status);
-            }
-        });
-        context.updateContext();
-        contextTable.setRowSorter(new TableRowSorter<>());
-        contextTable.setModel(new ContextDataModel(context));
-        contextTable.setDefaultRenderer(Object.class, new PODCellRenderer(model));
-        Enumeration<TableColumn> e = contextTable.getColumnModel().getColumns();
-        JComboBox comboBox = new JComboBox(new Object[]{"+", "-", " "});
-        while (e.hasMoreElements()) {
-            TableColumn col = e.nextElement();
-            col.setHeaderRenderer(new VerticalTableHeaderCellRenderer());
-            col.setCellEditor(new DefaultCellEditor(comboBox));
-        }
-        guiExpert = new GuiExpert();
-        final FCA fca = new FCA();
-        fca.setContext(context);
-        fca.setExpert(guiExpert);
-        new SwingWorker() {
-            @Override
-            protected Object doInBackground() throws Exception {
-                fca.reset();
-                fca.run();
-                return null;
-            }
-
-            @Override
-            protected void done() {
-                implicationText.setText("Bye-bye");
-            }
-        }.execute();
-        jTabbedPane1.setEnabledAt(jTabbedPane1.indexOfComponent(setupTab), false);
-        jTabbedPane1.setEnabledAt(jTabbedPane1.indexOfComponent(fcaTab), true);
-        jTabbedPane1.setSelectedComponent(fcaTab);
-    }//GEN-LAST:event_startButtonActionPerformed
+        attributes = createAttributes();
+        start.setEnabled(attributes != null);
+        forcedAttributes.setModel(new CheckBoxListModel(attributes));
+    }//GEN-LAST:event_generateAttributesActionPerformed
 
     private void addNewButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addNewButtonActionPerformed
         String uri = JOptionPane.showInputDialog(this, "Enter individual URI");
@@ -703,6 +692,65 @@ public class MainWindow extends javax.swing.JFrame {
         ((TableRowSorter) contextTable.getRowSorter()).setRowFilter(null);
     }//GEN-LAST:event_resetFilterActionPerformed
 
+    private void startActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startActionPerformed
+        final List<Attribute> forced = ((CheckBoxListModel) forcedAttributes.getModel()).getChecked();
+        Collections.sort(attributes, new Comparator<Attribute>() {
+
+            @Override
+            public int compare(Attribute o1, Attribute o2) {
+                boolean f1 = forced.contains(o1);
+                boolean f2 = forced.contains(o2);
+                if (f1 != f2) {
+                    return f1 ? -1 : 1;
+                }
+                return ((ClassAttribute) o1).getOntClass().compareTo(((ClassAttribute) o2).getOntClass());
+            }
+        });
+        context = new PartialContext(new SimpleSetOfAttributes(attributes), model);
+        context.addProgressListener(new ProgressListener() {
+            @Override
+            public void reset(int max) {
+                updateProgressBar.setMaximum(max);
+            }
+
+            @Override
+            public void update(int status) {
+                updateProgressBar.setValue(status);
+            }
+        });
+        context.updateContext();
+        contextTable.setRowSorter(new TableRowSorter<>());
+        contextTable.setModel(new ContextDataModel(context));
+        contextTable.setDefaultRenderer(Object.class, new PODCellRenderer(model));
+        Enumeration<TableColumn> e = contextTable.getColumnModel().getColumns();
+        JComboBox comboBox = new JComboBox(new Object[]{"+", "-", " "});
+        while (e.hasMoreElements()) {
+            TableColumn col = e.nextElement();
+            col.setHeaderRenderer(new VerticalTableHeaderCellRenderer());
+            col.setCellEditor(new DefaultCellEditor(comboBox));
+        }
+        guiExpert = new GuiExpert();
+        final FCA fca = new FCA();
+        fca.setContext(context);
+        fca.setExpert(guiExpert);
+        new SwingWorker() {
+            @Override
+            protected Object doInBackground() throws Exception {
+                fca.reset(forced.size());
+                fca.run();
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                implicationText.setText("Bye-bye");
+            }
+        }.execute();
+        jTabbedPane1.setEnabledAt(jTabbedPane1.indexOfComponent(setupTab), false);
+        jTabbedPane1.setEnabledAt(jTabbedPane1.indexOfComponent(fcaTab), true);
+        jTabbedPane1.setSelectedComponent(fcaTab);
+    }//GEN-LAST:event_startActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -746,6 +794,8 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JSplitPane fcaTab;
     private javax.swing.JTable featuresTable;
     private javax.swing.JTextField filterText;
+    private javax.swing.JList forcedAttributes;
+    private javax.swing.JButton generateAttributes;
     private javax.swing.JLabel implicationText;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -755,13 +805,14 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable learningExamplesTable;
     private javax.swing.JButton rejectButton;
     private javax.swing.JButton resetFilter;
     private javax.swing.JPanel setupTab;
-    private javax.swing.JButton startButton;
+    private javax.swing.JButton start;
     private javax.swing.JProgressBar updateProgressBar;
     private javax.swing.JCheckBox useNegativeDomains;
     private javax.swing.JCheckBox useNegativeNamedClasses;
