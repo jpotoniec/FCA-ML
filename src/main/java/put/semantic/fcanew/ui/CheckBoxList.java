@@ -25,6 +25,21 @@ import javax.swing.JList;
  */
 public class CheckBoxList<T> extends JList<T> {
 
+    public interface Transformer<T> {
+
+        public String transform(T object);
+    }
+
+    private final Transformer<T> DEFAULT_TRANSFOMER = new Transformer<T>() {
+
+        @Override
+        public String transform(T object) {
+            return object.toString();
+        }
+    };
+
+    private Transformer<T> transformer = DEFAULT_TRANSFOMER;
+
     public CheckBoxList() {
         setCellRenderer(new CheckBoxListCellRenderer());
 
@@ -45,6 +60,19 @@ public class CheckBoxList<T> extends JList<T> {
         );
     }
 
+    public void setTransformer(Transformer<T> transformer) {
+        if (transformer != null) {
+            this.transformer = transformer;
+        } else {
+            this.transformer = DEFAULT_TRANSFOMER;
+        }
+    }
+
+    public Transformer<T> getTransformer() {
+        assert transformer != null;
+        return transformer;
+    }
+
     private static class CheckBoxListCellRenderer extends DefaultListCellRenderer {
 
         @Override
@@ -53,7 +81,7 @@ public class CheckBoxList<T> extends JList<T> {
                 return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
             }
             final CheckBoxListModel model = (CheckBoxListModel) list.getModel();
-            Action a = new AbstractAction(value.toString()) {
+            Action a = new AbstractAction(((CheckBoxList) list).getTransformer().transform(value)) {
 
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -63,7 +91,7 @@ public class CheckBoxList<T> extends JList<T> {
                 }
             };
             JCheckBox result = new JCheckBox(a);
-            result.setSelected(model.isChecked(index));            
+            result.setSelected(model.isChecked(index));
             result.setOpaque(isSelected);
             result.setBackground(isSelected ? list.getSelectionBackground() : list.getBackground());
             result.setForeground(isSelected ? list.getSelectionForeground() : list.getForeground());

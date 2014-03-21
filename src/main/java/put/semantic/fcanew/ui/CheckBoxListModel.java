@@ -6,6 +6,7 @@
 package put.semantic.fcanew.ui;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import javax.swing.ListModel;
 import javax.swing.event.ListDataEvent;
@@ -20,6 +21,11 @@ public class CheckBoxListModel<T> implements ListModel<T> {
     public CheckBoxListModel(List<? extends T> items) {
         this.items = items;
         this.checked = new boolean[this.items.size()];
+    }
+
+    public CheckBoxListModel(List<? extends T> items, boolean[] checked) {
+        this.items = items;
+        this.checked = Arrays.copyOf(checked, items.size());
     }
 
     @Override
