@@ -48,6 +48,10 @@ public class CheckBoxListModel<T> implements ListModel<T> {
         return result;
     }
 
+    public boolean[] getCheckedAsArray() {
+        return Arrays.copyOf(checked, checked.length);
+    }
+
     public boolean isChecked(int index) {
         return checked[index];
     }

@@ -33,6 +33,8 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.RowFilter;
 import javax.swing.SwingWorker;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
@@ -73,6 +75,7 @@ import put.semantic.fcanew.ml.features.impl.RuleCalculator;
 import put.semantic.fcanew.ml.features.impl.SatCalculator;
 import put.semantic.fcanew.ml.features.values.FeatureValue;
 import put.semantic.fcanew.ml.features.values.NumericFeatureValue;
+import put.semantic.fcanew.preferences.PreferencesProvider;
 import uk.ac.manchester.cs.jfact.JFactFactory;
 import uk.ac.manchester.cs.owlapi.dlsyntax.DLSyntaxObjectRenderer;
 
@@ -268,16 +271,39 @@ public class MainWindow extends javax.swing.JFrame {
     private GuiExpert guiExpert;
     private OWLReasoner model;
     private List<? extends Attribute> attributes;
-    private final CheckBoxListModel<FeatureCalculator> availableCalculatorsModel = new CheckBoxListModel<FeatureCalculator>(Arrays.asList(
-            new RuleCalculator(),
-            new FollowingCalculators(),
-            new SatCalculator(),
-            new ConsistencyCalculator()), new boolean[]{true, true, false, false});
+    private final CheckBoxListModel<FeatureCalculator> availableCalculatorsModel;
 
     /**
      * Creates new form MainWindow
      */
     public MainWindow() {
+        availableCalculatorsModel = new CheckBoxListModel<FeatureCalculator>(Arrays.asList(
+                new RuleCalculator(),
+                new FollowingCalculators(),
+                new SatCalculator(),
+                new ConsistencyCalculator()), PreferencesProvider.getInstance().getCalculators());
+        availableCalculatorsModel.addListDataListener(new ListDataListener() {
+
+            private void save(ListDataEvent e) {
+                boolean[] checked = ((CheckBoxListModel<FeatureCalculator>) e.getSource()).getCheckedAsArray();
+                PreferencesProvider.getInstance().setCalculators(checked);
+            }
+
+            @Override
+            public void intervalAdded(ListDataEvent e) {
+                save(e);
+            }
+
+            @Override
+            public void intervalRemoved(ListDataEvent e) {
+                save(e);
+            }
+
+            @Override
+            public void contentsChanged(ListDataEvent e) {
+                save(e);
+            }
+        });
         initComponents();
         normalFont = acceptButton.getFont();
         boldFont = normalFont.deriveFont(Font.BOLD);

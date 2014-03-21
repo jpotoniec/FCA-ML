@@ -16,6 +16,7 @@ import javax.swing.ListModel;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 import org.apache.commons.lang.StringUtils;
+import put.semantic.fcanew.preferences.PreferencesProvider;
 
 /**
  *
@@ -26,31 +27,12 @@ public class FilesListModel implements ListModel<File> {
     private final List<File> data = new ArrayList<>();
     private final List<ListDataListener> listeners = new ArrayList<>();
 
-    private void loadPreferences() {
-        String filesString = Preferences.userNodeForPackage(MainWindow.class).get("files", "");
-        if (filesString == null) {
-            return;
-        }
-        String[] paths = StringUtils.split(filesString, File.pathSeparatorChar);
-        for (String path : paths) {
-            File f = new File(path);
-            if (f.isFile() && f.canRead()) {
-                add(f);
-            }
-        }
-    }
-
     private void savePreferences() {
-        List<String> paths = new ArrayList<>();
-        for (File f : data) {
-            paths.add(f.getAbsolutePath());
-        }
-        String files = StringUtils.join(paths, File.pathSeparatorChar);
-        Preferences.userNodeForPackage(MainWindow.class).put("files", files);
+        PreferencesProvider.getInstance().setFiles(data);
     }
 
     public FilesListModel() {
-        loadPreferences();
+        data.addAll(PreferencesProvider.getInstance().getFiles());
         addListDataListener(new ListDataListener() {
 
             @Override
