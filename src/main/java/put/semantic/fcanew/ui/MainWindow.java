@@ -37,6 +37,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableRowSorter;
+import org.apache.commons.lang.StringUtils;
 import org.semanticweb.HermiT.Reasoner;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.IRI;
@@ -150,11 +151,7 @@ public class MainWindow extends javax.swing.JFrame {
 
     private class GuiExpert implements Expert {
 
-        private final List<? extends FeatureCalculator> calculators = Arrays.asList(
-                new RuleCalculator(),
-                new FollowingCalculators(),
-                new SatCalculator(),
-                new ConsistencyCalculator());
+        private final List<? extends FeatureCalculator> calculators;
         private final Object lock = new Object();
         private Decision dec;
         private Map<String, Double> lastFeatures;
@@ -164,6 +161,7 @@ public class MainWindow extends javax.swing.JFrame {
 
         public GuiExpert(Classifier cl) {
             this.classifier = cl;
+            this.calculators = availableCalculatorsModel.getChecked();
             List<String> features = new ArrayList<>();
             for (FeatureCalculator calc : calculators) {
                 features.addAll(calc.getNames());
@@ -270,6 +268,11 @@ public class MainWindow extends javax.swing.JFrame {
     private GuiExpert guiExpert;
     private OWLReasoner model;
     private List<? extends Attribute> attributes;
+    private final CheckBoxListModel<FeatureCalculator> availableCalculatorsModel = new CheckBoxListModel<FeatureCalculator>(Arrays.asList(
+            new RuleCalculator(),
+            new FollowingCalculators(),
+            new SatCalculator(),
+            new ConsistencyCalculator()), new boolean[]{true, true, false, false});
 
     /**
      * Creates new form MainWindow
@@ -279,6 +282,13 @@ public class MainWindow extends javax.swing.JFrame {
         normalFont = acceptButton.getFont();
         boldFont = normalFont.deriveFont(Font.BOLD);
         initFiles();
+        ((CheckBoxList<FeatureCalculator>) availableCalculators).setTransformer(new CheckBoxList.Transformer<FeatureCalculator>() {
+
+            @Override
+            public String transform(FeatureCalculator calc) {
+                return calc.getClass().getSimpleName() + ": " + StringUtils.join(calc.getNames(), ", ");
+            }
+        });
     }
 
     /**
@@ -317,6 +327,9 @@ public class MainWindow extends javax.swing.JFrame {
         useHermit = new javax.swing.JRadioButton();
         jPanel4 = new javax.swing.JPanel();
         classifierToUse = new javax.swing.JComboBox();
+        jPanel5 = new javax.swing.JPanel();
+        jScrollPane7 = new javax.swing.JScrollPane();
+        availableCalculators = new CheckBoxList<FeatureCalculator>();
         fcaTab = new javax.swing.JSplitPane();
         jSplitPane1 = new javax.swing.JSplitPane();
         jPanel1 = new javax.swing.JPanel();
@@ -463,7 +476,7 @@ public class MainWindow extends javax.swing.JFrame {
                 .addComponent(useJFact)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(useHermit)
-                .addContainerGap(11, Short.MAX_VALUE))
+                .addContainerGap(13, Short.MAX_VALUE))
         );
 
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Classifier"));
@@ -484,7 +497,28 @@ public class MainWindow extends javax.swing.JFrame {
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(classifierToUse, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(64, Short.MAX_VALUE))
+                .addContainerGap(66, Short.MAX_VALUE))
+        );
+
+        jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder("Feature calculators"));
+
+        availableCalculators.setModel(availableCalculatorsModel);
+        jScrollPane7.setViewportView(availableCalculators);
+
+        javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
+        jPanel5.setLayout(jPanel5Layout);
+        jPanel5Layout.setHorizontalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane7))
+        );
+        jPanel5Layout.setVerticalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 186, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         javax.swing.GroupLayout setupTabLayout = new javax.swing.GroupLayout(setupTab);
@@ -523,7 +557,8 @@ public class MainWindow extends javax.swing.JFrame {
                     .addGroup(setupTabLayout.createSequentialGroup()
                         .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
-                        .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         setupTabLayout.setVerticalGroup(
@@ -556,7 +591,9 @@ public class MainWindow extends javax.swing.JFrame {
                     .addComponent(start)
                     .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(582, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(337, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Setup", setupTab);
@@ -976,6 +1013,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JButton addFile;
     private javax.swing.JButton addNewButton;
     private javax.swing.JButton applyFilter;
+    private javax.swing.JList availableCalculators;
     private javax.swing.JPanel classifierTab;
     private javax.swing.JComboBox classifierToUse;
     private javax.swing.JTable confusionMatrix;
@@ -995,12 +1033,14 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanel5;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JScrollPane jScrollPane5;
     private javax.swing.JScrollPane jScrollPane6;
+    private javax.swing.JScrollPane jScrollPane7;
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable learningExamplesTable;
