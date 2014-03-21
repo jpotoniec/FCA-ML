@@ -5,6 +5,7 @@
  */
 package put.semantic.fcanew.ui;
 
+import javax.swing.event.TableModelEvent;
 import javax.swing.table.AbstractTableModel;
 import put.semantic.fcanew.Attribute;
 import put.semantic.fcanew.Implication;
@@ -38,11 +39,18 @@ public class ContextDataModel extends AbstractTableModel implements PartialConte
 
     public void setCurrentImplication(Implication currentImplication) {
         this.currentImplication = currentImplication;
-        for (int row = 0; row < getRowCount(); ++row) {
-            for (int col = 0; col < SPECIAL_ATTRIBUTES.length; ++col) {
-                fireTableCellUpdated(row, col);
+        for (int col = 0; col < SPECIAL_ATTRIBUTES.length; ++col) {
+            try {
+                fireTableChanged(new TableModelEvent(this, 0, getRowCount(), col, TableModelEvent.UPDATE));
+            } catch (IndexOutOfBoundsException ex) {
+                ex.printStackTrace();
             }
         }
+//        for (int row = 0; row < getRowCount(); ++row) {
+//            for (int col = 0; col < SPECIAL_ATTRIBUTES.length; ++col) {
+//                fireTableCellUpdated(row, col);
+//            }
+//        }
     }
 
     @Override
