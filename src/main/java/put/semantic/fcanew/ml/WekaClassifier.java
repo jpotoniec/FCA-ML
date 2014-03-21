@@ -117,4 +117,10 @@ public class WekaClassifier extends put.semantic.fcanew.ml.AbstractClassifier {
     public TableModel getExamplesTableModel() {
         return tableModel;
     }
+
+    @Override
+    public String toString() {
+        return "Weka: " + classifier.getClass().getSimpleName();
+    }
+
 }

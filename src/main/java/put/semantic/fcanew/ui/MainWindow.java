@@ -66,7 +66,6 @@ import put.semantic.fcanew.ProgressListener;
 import put.semantic.fcanew.SimpleSetOfAttributes;
 import put.semantic.fcanew.ml.Classifier;
 import put.semantic.fcanew.ml.ConfusionMatrix;
-import put.semantic.fcanew.ml.WekaClassifier;
 import put.semantic.fcanew.ml.features.FeatureCalculator;
 import put.semantic.fcanew.ml.features.impl.ConsistencyCalculator;
 import put.semantic.fcanew.ml.features.impl.FollowingCalculators;
@@ -76,7 +75,6 @@ import put.semantic.fcanew.ml.features.values.FeatureValue;
 import put.semantic.fcanew.ml.features.values.NumericFeatureValue;
 import uk.ac.manchester.cs.jfact.JFactFactory;
 import uk.ac.manchester.cs.owlapi.dlsyntax.DLSyntaxObjectRenderer;
-import weka.classifiers.rules.JRip;
 
 /**
  *
@@ -162,12 +160,11 @@ public class MainWindow extends javax.swing.JFrame {
         private Decision dec;
         private Map<String, Double> lastFeatures;
         private Implication currentImplication;
-//        private Classifier classifier = new LinearRegression("follows from KB", "support", "support (premises)", "support (conclusions)");
-        private Classifier classifier;
+        private final Classifier classifier;
         private Boolean shouldAccept;
 
-        public GuiExpert() {
-            classifier = new WekaClassifier(new JRip());
+        public GuiExpert(Classifier cl) {
+            this.classifier = cl;
             List<String> features = new ArrayList<>();
             for (FeatureCalculator calc : calculators) {
                 features.addAll(calc.getNames());
@@ -319,6 +316,8 @@ public class MainWindow extends javax.swing.JFrame {
         usePellet = new javax.swing.JRadioButton();
         useJFact = new javax.swing.JRadioButton();
         useHermit = new javax.swing.JRadioButton();
+        jPanel4 = new javax.swing.JPanel();
+        classifierToUse = new javax.swing.JComboBox();
         fcaTab = new javax.swing.JSplitPane();
         jSplitPane1 = new javax.swing.JSplitPane();
         jPanel1 = new javax.swing.JPanel();
@@ -465,7 +464,28 @@ public class MainWindow extends javax.swing.JFrame {
                 .addComponent(useJFact)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(useHermit)
-                .addContainerGap(9, Short.MAX_VALUE))
+                .addContainerGap(11, Short.MAX_VALUE))
+        );
+
+        jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Classifier"));
+
+        classifierToUse.setModel(new put.semantic.fcanew.ui.AvailableClassifiersModel());
+
+        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
+        jPanel4.setLayout(jPanel4Layout);
+        jPanel4Layout.setHorizontalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(classifierToUse, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        jPanel4Layout.setVerticalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(classifierToUse, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(64, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout setupTabLayout = new javax.swing.GroupLayout(setupTab);
@@ -503,7 +523,8 @@ public class MainWindow extends javax.swing.JFrame {
                     .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(setupTabLayout.createSequentialGroup()
                         .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addGap(18, 18, 18)
+                        .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         setupTabLayout.setVerticalGroup(
@@ -534,8 +555,9 @@ public class MainWindow extends javax.swing.JFrame {
                 .addGap(18, 18, 18)
                 .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(start)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(589, Short.MAX_VALUE))
+                    .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(582, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Setup", setupTab);
@@ -868,7 +890,7 @@ public class MainWindow extends javax.swing.JFrame {
             col.setHeaderRenderer(new VerticalTableHeaderCellRenderer());
             col.setCellEditor(new DefaultCellEditor(comboBox));
         }
-        guiExpert = new GuiExpert();
+        guiExpert = new GuiExpert((Classifier) classifierToUse.getSelectedItem());
         final FCA fca = new FCA();
         fca.setContext(context);
         fca.setExpert(guiExpert);
@@ -952,6 +974,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JButton addNewButton;
     private javax.swing.JButton applyFilter;
     private javax.swing.JPanel classifierTab;
+    private javax.swing.JComboBox classifierToUse;
     private javax.swing.JTable confusionMatrix;
     private javax.swing.JTable contextTable;
     private javax.swing.JSplitPane fcaTab;
@@ -968,6 +991,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;

@@ -10,11 +10,9 @@
 package put.semantic.fcanew.ml;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import javax.swing.table.AbstractTableModel;
-import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
 
@@ -115,4 +113,10 @@ public class LinearRegression extends AbstractClassifier {
     public TableModel getExamplesTableModel() {
         return tableModel;
     }
+
+    @Override
+    public String toString() {
+        return "Apache Commons Linear Regression";
+    }
+
 }
