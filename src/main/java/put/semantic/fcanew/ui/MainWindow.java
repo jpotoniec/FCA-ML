@@ -329,18 +329,6 @@ public class MainWindow extends javax.swing.JFrame {
         reasoners = new javax.swing.ButtonGroup();
         jTabbedPane1 = new javax.swing.JTabbedPane();
         setupTab = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
-        jLabel2 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
-        usePositiveNamedClasses = new javax.swing.JCheckBox();
-        useNegativeNamedClasses = new javax.swing.JCheckBox();
-        usePositiveDomains = new javax.swing.JCheckBox();
-        useNegativeDomains = new javax.swing.JCheckBox();
-        usePositiveRanges = new javax.swing.JCheckBox();
-        useNegativeRanges = new javax.swing.JCheckBox();
-        generateAttributes = new javax.swing.JButton();
-        jScrollPane4 = new javax.swing.JScrollPane();
-        forcedAttributes = new CheckBoxList<Attribute>();
         start = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         jScrollPane5 = new javax.swing.JScrollPane();
@@ -356,6 +344,20 @@ public class MainWindow extends javax.swing.JFrame {
         jPanel5 = new javax.swing.JPanel();
         jScrollPane7 = new javax.swing.JScrollPane();
         availableCalculators = new CheckBoxList<FeatureCalculator>();
+        jPanel6 = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
+        usePositiveNamedClasses = new javax.swing.JCheckBox();
+        useNegativeNamedClasses = new javax.swing.JCheckBox();
+        usePositiveDomains = new javax.swing.JCheckBox();
+        useNegativeDomains = new javax.swing.JCheckBox();
+        usePositiveRanges = new javax.swing.JCheckBox();
+        useNegativeRanges = new javax.swing.JCheckBox();
+        generateAttributes = new javax.swing.JButton();
+        jPanel7 = new javax.swing.JPanel();
+        jScrollPane4 = new javax.swing.JScrollPane();
+        forcedAttributes = new CheckBoxList<Attribute>();
         fcaTab = new javax.swing.JSplitPane();
         jSplitPane1 = new javax.swing.JSplitPane();
         jPanel1 = new javax.swing.JPanel();
@@ -380,42 +382,8 @@ public class MainWindow extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        jLabel1.setText("Named classes");
-
-        jLabel2.setText("Domains");
-
-        jLabel3.setText("Ranges");
-
-        usePositiveNamedClasses.setSelected(true);
-        usePositiveNamedClasses.setText("Positive");
-
-        useNegativeNamedClasses.setText("Negative");
-
-        usePositiveDomains.setSelected(true);
-        usePositiveDomains.setText("Positive");
-
-        useNegativeDomains.setText("Negative");
-
-        usePositiveRanges.setSelected(true);
-        usePositiveRanges.setText("Positive");
-
-        useNegativeRanges.setText("Negative");
-
-        generateAttributes.setText("Generate attributes");
-        generateAttributes.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                generateAttributesActionPerformed(evt);
-            }
-        });
-
-        forcedAttributes.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
-        forcedAttributes.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        jScrollPane4.setViewportView(forcedAttributes);
-
+        start.setFont(start.getFont().deriveFont(start.getFont().getSize()+10f));
+        start.setForeground(new java.awt.Color(255, 0, 0));
         start.setText("Start");
         start.setEnabled(false);
         start.addActionListener(new java.awt.event.ActionListener() {
@@ -450,7 +418,7 @@ public class MainWindow extends javax.swing.JFrame {
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 746, Short.MAX_VALUE)
+                    .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 724, Short.MAX_VALUE)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(addFile)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -461,7 +429,7 @@ public class MainWindow extends javax.swing.JFrame {
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
-                .addComponent(jScrollPane5)
+                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 208, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(addFile)
@@ -502,7 +470,7 @@ public class MainWindow extends javax.swing.JFrame {
                 .addComponent(useJFact)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(useHermit)
-                .addContainerGap(13, Short.MAX_VALUE))
+                .addContainerGap(16, Short.MAX_VALUE))
         );
 
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Classifier"));
@@ -523,7 +491,7 @@ public class MainWindow extends javax.swing.JFrame {
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(classifierToUse, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(66, Short.MAX_VALUE))
+                .addContainerGap(69, Short.MAX_VALUE))
         );
 
         jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder("Feature calculators"));
@@ -547,37 +515,124 @@ public class MainWindow extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
+        jPanel6.setBorder(javax.swing.BorderFactory.createTitledBorder("Attributes"));
+
+        jLabel1.setText("Named classes");
+
+        jLabel2.setText("Domains");
+
+        jLabel3.setText("Ranges");
+
+        usePositiveNamedClasses.setSelected(true);
+        usePositiveNamedClasses.setText("Positive");
+
+        useNegativeNamedClasses.setText("Negative");
+
+        usePositiveDomains.setSelected(true);
+        usePositiveDomains.setText("Positive");
+
+        useNegativeDomains.setText("Negative");
+
+        usePositiveRanges.setSelected(true);
+        usePositiveRanges.setText("Positive");
+
+        useNegativeRanges.setText("Negative");
+
+        generateAttributes.setText("Generate attributes");
+        generateAttributes.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                generateAttributesActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
+        jPanel6.setLayout(jPanel6Layout);
+        jPanel6Layout.setHorizontalGroup(
+            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 386, Short.MAX_VALUE)
+            .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel6Layout.createSequentialGroup()
+                    .addContainerGap()
+                    .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(jLabel1)
+                        .addComponent(jLabel2)
+                        .addComponent(jLabel3))
+                    .addGap(18, 18, 18)
+                    .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(generateAttributes)
+                        .addGroup(jPanel6Layout.createSequentialGroup()
+                            .addComponent(usePositiveRanges)
+                            .addGap(18, 18, 18)
+                            .addComponent(useNegativeRanges))
+                        .addGroup(jPanel6Layout.createSequentialGroup()
+                            .addComponent(usePositiveDomains)
+                            .addGap(18, 18, 18)
+                            .addComponent(useNegativeDomains))
+                        .addGroup(jPanel6Layout.createSequentialGroup()
+                            .addComponent(usePositiveNamedClasses)
+                            .addGap(18, 18, 18)
+                            .addComponent(useNegativeNamedClasses)))
+                    .addContainerGap(63, Short.MAX_VALUE)))
+        );
+        jPanel6Layout.setVerticalGroup(
+            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 141, Short.MAX_VALUE)
+            .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel6Layout.createSequentialGroup()
+                    .addContainerGap()
+                    .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel1)
+                        .addComponent(usePositiveNamedClasses)
+                        .addComponent(useNegativeNamedClasses))
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                    .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel2)
+                        .addComponent(usePositiveDomains)
+                        .addComponent(useNegativeDomains))
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                    .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel3)
+                        .addComponent(usePositiveRanges)
+                        .addComponent(useNegativeRanges))
+                    .addGap(18, 18, 18)
+                    .addComponent(generateAttributes)
+                    .addContainerGap(13, Short.MAX_VALUE)))
+        );
+
+        jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder("Forced attributes"));
+
+        forcedAttributes.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        jScrollPane4.setViewportView(forcedAttributes);
+
+        javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
+        jPanel7.setLayout(jPanel7Layout);
+        jPanel7Layout.setHorizontalGroup(
+            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel7Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 362, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        jPanel7Layout.setVerticalGroup(
+            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel7Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 301, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+
         javax.swing.GroupLayout setupTabLayout = new javax.swing.GroupLayout(setupTab);
         setupTab.setLayout(setupTabLayout);
         setupTabLayout.setHorizontalGroup(
             setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(setupTabLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(start)
-                    .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addComponent(jScrollPane4)
-                        .addGroup(setupTabLayout.createSequentialGroup()
-                            .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(jLabel1)
-                                .addComponent(jLabel2)
-                                .addComponent(jLabel3))
-                            .addGap(18, 18, 18)
-                            .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(generateAttributes)
-                                .addGroup(setupTabLayout.createSequentialGroup()
-                                    .addComponent(usePositiveRanges)
-                                    .addGap(18, 18, 18)
-                                    .addComponent(useNegativeRanges))
-                                .addGroup(setupTabLayout.createSequentialGroup()
-                                    .addComponent(usePositiveDomains)
-                                    .addGap(18, 18, 18)
-                                    .addComponent(useNegativeDomains))
-                                .addGroup(setupTabLayout.createSequentialGroup()
-                                    .addComponent(usePositiveNamedClasses)
-                                    .addGap(18, 18, 18)
-                                    .addComponent(useNegativeNamedClasses))))))
-                .addGap(81, 81, 81)
+                .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(start))
+                .addGap(18, 18, 18)
                 .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(setupTabLayout.createSequentialGroup()
@@ -591,35 +646,22 @@ public class MainWindow extends javax.swing.JFrame {
             setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(setupTabLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(setupTabLayout.createSequentialGroup()
-                        .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel1)
-                            .addComponent(usePositiveNamedClasses)
-                            .addComponent(useNegativeNamedClasses))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel2)
-                            .addComponent(usePositiveDomains)
-                            .addComponent(useNegativeDomains))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel3)
-                            .addComponent(usePositiveRanges)
-                            .addComponent(useNegativeRanges))
-                        .addGap(18, 18, 18)
-                        .addComponent(generateAttributes)
-                        .addGap(20, 20, 20)
-                        .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addGap(18, 18, 18)
                 .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(start)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(337, Short.MAX_VALUE))
+                    .addGroup(setupTabLayout.createSequentialGroup()
+                        .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, 18)
+                        .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(setupTabLayout.createSequentialGroup()
+                        .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(start)))
+                .addContainerGap(330, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Setup", setupTab);
@@ -1060,6 +1102,8 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
+    private javax.swing.JPanel jPanel6;
+    private javax.swing.JPanel jPanel7;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
