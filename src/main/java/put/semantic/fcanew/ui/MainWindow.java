@@ -261,6 +261,14 @@ public class MainWindow extends javax.swing.JFrame {
                     setEnabled(true);
                 }
             });
+            if (features.get("follows from KB") == 1) {
+                EventQueue.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        acceptButton.doClick();
+                    }
+                });
+            }
         }
 
         public Implication getCurrentImplication() {
