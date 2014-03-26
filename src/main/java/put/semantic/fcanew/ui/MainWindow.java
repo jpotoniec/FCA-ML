@@ -196,6 +196,9 @@ public class MainWindow extends javax.swing.JFrame {
         }
 
         private void accept() {
+            if (currentImplication.isRefutedBy(context)) {
+                return;
+            }
             setEnabled(false);
             ((ConfusionMatrix) confusionMatrix.getModel()).add(shouldAccept, true);
             synchronized (lock) {
@@ -207,6 +210,9 @@ public class MainWindow extends javax.swing.JFrame {
         }
 
         private void reject() {
+            if (!currentImplication.isRefutedBy(context)) {
+                return;
+            }
             setEnabled(false);
             ((ConfusionMatrix) confusionMatrix.getModel()).add(shouldAccept, false);
             synchronized (lock) {
