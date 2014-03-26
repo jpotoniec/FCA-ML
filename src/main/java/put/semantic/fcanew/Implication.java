@@ -46,4 +46,17 @@ public class Implication {
         OWLSubClassOfAxiom a = model.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLSubClassOfAxiom(subClass, superClass);
         return a;
     }
+
+    public boolean isRefutedBy(PartialContext context) {
+        for (POD p : context.getPODs()) {
+            if (isRefutedBy(p)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isRefutedBy(POD p) {
+        return p.getPositive().containsAll(premises) && p.getNegative().containsAny(conclusions);
+    }
 }

@@ -15,6 +15,22 @@ import java.util.TreeSet;
  */
 public class SubsetOfAttributes extends ReadOnlySubsetOfAttributes {
 
+    public static SubsetOfAttributes intersectionOf(ReadOnlySubsetOfAttributes a, ReadOnlySubsetOfAttributes... other) {
+        SubsetOfAttributes result = new SubsetOfAttributes(a);
+        for (ReadOnlySubsetOfAttributes b : other) {
+            assert result.base == b.base;
+            result.indexes.retainAll(b.indexes);
+        }
+        return result;
+    }
+
+    public static SubsetOfAttributes unionOf(ReadOnlySubsetOfAttributes a, ReadOnlySubsetOfAttributes b) {
+        assert a.base == b.base;
+        SubsetOfAttributes result = new SubsetOfAttributes(a);
+        result.indexes.addAll(b.indexes);
+        return result;
+    }
+
     public SubsetOfAttributes(SetOfAttributes base) {
         this.base = base;
         this.indexes = new TreeSet<>();
@@ -35,6 +51,14 @@ public class SubsetOfAttributes extends ReadOnlySubsetOfAttributes {
         this.indexes = new TreeSet<>(Arrays.asList(attributes));
     }
 
+    public SubsetOfAttributes(SetOfAttributes base, Iterable<Attribute> attributes) {
+        this.base = base;
+        this.indexes = new TreeSet<>();
+        for (Attribute a : attributes) {
+            this.indexes.add(base.indexOf(a));
+        }
+    }
+
     public void removeAll(ReadOnlySubsetOfAttributes other) {
         assert this.base == other.base;
         indexes.removeAll(other.indexes);
@@ -44,7 +68,6 @@ public class SubsetOfAttributes extends ReadOnlySubsetOfAttributes {
         assert this.base == other.base;
         indexes.addAll(other.indexes);
     }
-
 
     public void add(int j) {
         indexes.add(j);

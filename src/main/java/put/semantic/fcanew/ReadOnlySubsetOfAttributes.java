@@ -7,6 +7,7 @@ package put.semantic.fcanew;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.NavigableSet;
+import java.util.Objects;
 import java.util.Set;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
@@ -117,4 +118,25 @@ public abstract class ReadOnlySubsetOfAttributes implements Iterable<Attribute> 
             return model.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLObjectIntersectionOf(classes);
         }
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof ReadOnlySubsetOfAttributes)) {
+            return false;
+        }
+        ReadOnlySubsetOfAttributes other = (ReadOnlySubsetOfAttributes) obj;
+        if (this.base != other.base) {
+            return false;
+        }
+        return this.indexes.equals(other.indexes);
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 41 * hash + Objects.hashCode(this.base);
+        hash = 41 * hash + Objects.hashCode(this.indexes);
+        return hash;
+    }
+
 }

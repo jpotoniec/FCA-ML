@@ -69,12 +69,14 @@ public class PartialContext {
         return Collections.unmodifiableList(pods);
     }
 
-    public SubsetOfAttributes K(SubsetOfAttributes p) {
+    public SubsetOfAttributes K(SubsetOfAttributes... pp) {
         SubsetOfAttributes m = new SubsetOfAttributes(getAttributes());
         m.fill();
         for (POD pod : getPODs()) {
-            if (pod.getPositive().containsAll(p)) {
-                m.removeAll(pod.getNegative());
+            for (SubsetOfAttributes p : pp) {
+                if (pod.getPositive().containsAll(p)) {
+                    m.removeAll(pod.getNegative());
+                }
             }
         }
         return m;

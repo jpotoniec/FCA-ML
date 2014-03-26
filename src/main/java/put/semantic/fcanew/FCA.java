@@ -5,7 +5,10 @@
  */
 package put.semantic.fcanew;
 
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -16,10 +19,11 @@ public class FCA {
 
     protected Expert expert;
     protected PartialContext context;
-    protected SubsetOfAttributes p;
+    protected SubsetOfAttributes p, forced;
     protected SetOfImplications implications;
     protected Implication current;
     protected Iterable<? extends Implication> bk;
+    protected boolean goToNext;
 
     public void setBackgroundKnowledge(Iterable<? extends Implication> bk) {
         this.bk = bk;
@@ -45,12 +49,10 @@ public class FCA {
         return null;
     }
 
-    public void reset(int forcedN) {
-        Integer[] forced = new Integer[forcedN];
-        for (int i = 0; i < forcedN; ++i) {
-            forced[i] = i;
-        }
-        p = new SubsetOfAttributes(context.getAttributes(), forced);
+    public void reset(Iterable<Attribute> forced) {
+        SetOfAttributes all = context.getAttributes();
+        this.forced = new SubsetOfAttributes(all, forced);
+        p = new SubsetOfAttributes(all);
         implications = new SetOfImplications();
         if (bk != null) {
             for (Implication i : bk) {
@@ -64,23 +66,56 @@ public class FCA {
         switch (decision) {
             case ACCEPT:
                 accept();
-                p = getNext(p);
                 break;
             case REJECT:
                 reject();
+                goToNext = false;
                 break;
             case SKIP:
                 throw new UnsupportedOperationException("Skip is not supported");
         }
     }
 
+    protected boolean isInteresting(Implication i) {
+        if (i.isTrivial()) {
+            return false;
+        }
+        return true;
+    }
+
+    public Set<SubsetOfAttributes> conclusions(SubsetOfAttributes premises) {
+        SetOfAttributes all = context.getAttributes();
+        Set<SubsetOfAttributes> result = new HashSet<>();
+        SubsetOfAttributes kp = context.K(premises);
+        if (premises.containsAny(forced)) {
+            result.add(kp);
+        } else {
+            for (Attribute a : forced) {
+                SubsetOfAttributes x = new SubsetOfAttributes(all, Arrays.asList(a));
+                result.add(SubsetOfAttributes.intersectionOf(kp, context.K(x), forced));
+            }
+        }
+        return result;
+    }
+
     public void run() {
         while (!p.isFull()) {
-            current = new Implication(p, context.K(p));
-            System.out.printf("Current implication: %s\n", current);
-            if (!current.isTrivial()) {
-                processCurrentImplication();
-            } else {
+            List<Implication> pending = new ArrayList<>();
+            for (SubsetOfAttributes c : conclusions(p)) {
+                pending.add(new Implication(p, c));
+            }
+            goToNext = true;
+            for (Implication i : pending) {
+                //check if i isn't already refuted or following from set of accepted implications
+                this.current = i;
+                System.out.printf("Current implication: %s\n", current);
+                if (i.isRefutedBy(context)) {
+                    System.out.println("Ignoring, already refuted");
+                } else if (isInteresting(current)) {
+                    processCurrentImplication();
+                }
+            }
+            if (goToNext) {
                 p = getNext(p);
             }
         }

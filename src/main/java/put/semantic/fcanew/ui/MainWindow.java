@@ -968,18 +968,6 @@ public class MainWindow extends javax.swing.JFrame {
 
     private void startActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startActionPerformed
         final List<Attribute> forced = ((CheckBoxListModel) forcedAttributes.getModel()).getChecked();
-        Collections.sort(attributes, new Comparator<Attribute>() {
-
-            @Override
-            public int compare(Attribute o1, Attribute o2) {
-                boolean f1 = forced.contains(o1);
-                boolean f2 = forced.contains(o2);
-                if (f1 != f2) {
-                    return f1 ? -1 : 1;
-                }
-                return ((ClassAttribute) o1).getOntClass().compareTo(((ClassAttribute) o2).getOntClass());
-            }
-        });
         context = new PartialContext(new SimpleSetOfAttributes(attributes), model);
         context.addProgressListener(new ProgressListener() {
             @Override
@@ -1013,7 +1001,7 @@ public class MainWindow extends javax.swing.JFrame {
         new SwingWorker() {
             @Override
             protected Object doInBackground() throws Exception {
-                fca.reset(forced.size());
+                fca.reset(forced);
                 fca.run();
                 return null;
             }
