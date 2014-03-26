@@ -404,6 +404,7 @@ public class MainWindow extends javax.swing.JFrame {
         confusionMatrix = new javax.swing.JTable();
         jScrollPane8 = new javax.swing.JScrollPane();
         history = new javax.swing.JTable();
+        mappingsPanel1 = new put.semantic.fcanew.ui.MappingsPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -495,7 +496,7 @@ public class MainWindow extends javax.swing.JFrame {
                 .addComponent(useJFact)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(useHermit)
-                .addContainerGap(17, Short.MAX_VALUE))
+                .addContainerGap(25, Short.MAX_VALUE))
         );
 
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Classifier"));
@@ -516,7 +517,7 @@ public class MainWindow extends javax.swing.JFrame {
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(classifierToUse, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(70, Short.MAX_VALUE))
+                .addContainerGap(78, Short.MAX_VALUE))
         );
 
         jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder("Feature calculators"));
@@ -686,7 +687,7 @@ public class MainWindow extends javax.swing.JFrame {
                         .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(start)))
-                .addContainerGap(329, Short.MAX_VALUE))
+                .addContainerGap(321, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Setup", setupTab);
@@ -872,6 +873,7 @@ public class MainWindow extends javax.swing.JFrame {
         );
 
         jTabbedPane1.addTab("Classifier", classifierTab);
+        jTabbedPane1.addTab("Mappings", mappingsPanel1);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -925,6 +927,7 @@ public class MainWindow extends javax.swing.JFrame {
         attributes = createAttributes();
         start.setEnabled(attributes != null);
         forcedAttributes.setModel(new CheckBoxListModel(attributes));
+        mappingsPanel1.updateAttributes(attributes);
     }//GEN-LAST:event_generateAttributesActionPerformed
 
     private void addNewButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addNewButtonActionPerformed
@@ -1135,6 +1138,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable learningExamplesTable;
+    private put.semantic.fcanew.ui.MappingsPanel mappingsPanel1;
     private javax.swing.ButtonGroup reasoners;
     private javax.swing.JButton rejectButton;
     private javax.swing.JButton removeFile;
