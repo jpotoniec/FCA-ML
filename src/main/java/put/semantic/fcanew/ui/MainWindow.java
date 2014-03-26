@@ -160,7 +160,7 @@ public class MainWindow extends javax.swing.JFrame {
         private Map<String, Double> lastFeatures;
         private Implication currentImplication;
         private final Classifier classifier;
-        private Boolean shouldAccept;
+        private double clResult;
 
         public GuiExpert(Classifier cl) {
             this.classifier = cl;
@@ -200,7 +200,8 @@ public class MainWindow extends javax.swing.JFrame {
                 return;
             }
             setEnabled(false);
-            ((ConfusionMatrix) confusionMatrix.getModel()).add(shouldAccept, true);
+            ((ConfusionMatrix) confusionMatrix.getModel()).add(shouldAccept(), true);
+            registerImplication(currentImplication, clResult, Decision.ACCEPT);
             synchronized (lock) {
                 classifier.addExample(lastFeatures, true);
                 classifier.updateModel();
@@ -214,7 +215,8 @@ public class MainWindow extends javax.swing.JFrame {
                 return;
             }
             setEnabled(false);
-            ((ConfusionMatrix) confusionMatrix.getModel()).add(shouldAccept, false);
+            ((ConfusionMatrix) confusionMatrix.getModel()).add(shouldAccept(), false);
+            registerImplication(currentImplication, clResult, Decision.REJECT);
             synchronized (lock) {
                 classifier.addExample(lastFeatures, false);
                 classifier.updateModel();
@@ -236,17 +238,20 @@ public class MainWindow extends javax.swing.JFrame {
             return result;
         }
 
+        private Boolean shouldAccept() {
+            if (clResult > 0.6) {
+                return true;
+            } else if (clResult < 0.4) {
+                return false;
+            } else {
+                return null;
+            }
+        }
+
         private void ask(final Implication impl) {
             final Map<String, Double> features = getFeatures(impl);
-            double clResult = classifier.classify(features);
-            if (clResult > 0.6) {
-                shouldAccept = true;
-            } else if (clResult < 0.4) {
-                shouldAccept = false;
-            } else {
-                shouldAccept = null;
-            }
-            highlightButton(shouldAccept);
+            clResult = classifier.classify(features);
+            highlightButton(shouldAccept());
             features.put("classifier", clResult);
             synchronized (lock) {
                 lastFeatures = features;
@@ -286,6 +291,10 @@ public class MainWindow extends javax.swing.JFrame {
     private OWLReasoner model;
     private List<? extends Attribute> attributes;
     private final CheckBoxListModel<FeatureCalculator> availableCalculatorsModel;
+
+    private void registerImplication(Implication i, double p, Expert.Decision d) {
+        ((HistoryTableModel) history.getModel()).add(i, p, d);
+    }
 
     /**
      * Creates new form MainWindow
@@ -393,6 +402,8 @@ public class MainWindow extends javax.swing.JFrame {
         learningExamplesTable = new javax.swing.JTable();
         jScrollPane6 = new javax.swing.JScrollPane();
         confusionMatrix = new javax.swing.JTable();
+        jScrollPane8 = new javax.swing.JScrollPane();
+        history = new javax.swing.JTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -484,7 +495,7 @@ public class MainWindow extends javax.swing.JFrame {
                 .addComponent(useJFact)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(useHermit)
-                .addContainerGap(16, Short.MAX_VALUE))
+                .addContainerGap(17, Short.MAX_VALUE))
         );
 
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Classifier"));
@@ -505,7 +516,7 @@ public class MainWindow extends javax.swing.JFrame {
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(classifierToUse, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(69, Short.MAX_VALUE))
+                .addContainerGap(70, Short.MAX_VALUE))
         );
 
         jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder("Feature calculators"));
@@ -675,7 +686,7 @@ public class MainWindow extends javax.swing.JFrame {
                         .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(start)))
-                .addContainerGap(330, Short.MAX_VALUE))
+                .addContainerGap(329, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Setup", setupTab);
@@ -831,6 +842,9 @@ public class MainWindow extends javax.swing.JFrame {
         confusionMatrix.setModel(new ConfusionMatrix());
         jScrollPane6.setViewportView(confusionMatrix);
 
+        history.setModel(new HistoryTableModel());
+        jScrollPane8.setViewportView(history);
+
         javax.swing.GroupLayout classifierTabLayout = new javax.swing.GroupLayout(classifierTab);
         classifierTab.setLayout(classifierTabLayout);
         classifierTabLayout.setHorizontalGroup(
@@ -841,16 +855,19 @@ public class MainWindow extends javax.swing.JFrame {
                     .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 1172, Short.MAX_VALUE)
                     .addGroup(classifierTabLayout.createSequentialGroup()
                         .addComponent(jScrollPane6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addGap(18, 18, 18)
+                        .addComponent(jScrollPane8)))
                 .addContainerGap())
         );
         classifierTabLayout.setVerticalGroup(
             classifierTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, classifierTabLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane6, javax.swing.GroupLayout.PREFERRED_SIZE, 117, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(classifierTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 205, Short.MAX_VALUE)
+                    .addComponent(jScrollPane6, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addGap(18, 18, 18)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 854, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 766, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1094,6 +1111,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JTextField filterText;
     private javax.swing.JList forcedAttributes;
     private javax.swing.JButton generateAttributes;
+    private javax.swing.JTable history;
     private javax.swing.JLabel implicationText;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -1113,6 +1131,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane5;
     private javax.swing.JScrollPane jScrollPane6;
     private javax.swing.JScrollPane jScrollPane7;
+    private javax.swing.JScrollPane jScrollPane8;
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable learningExamplesTable;
