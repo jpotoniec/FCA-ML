@@ -75,4 +75,12 @@ public class PreferencesProvider {
         }
         getNode().put("calculators", s);
     }
+
+    public void setMappingsFile(File f) {
+        getNode().put("mappings", f.getAbsolutePath());
+    }
+
+    public File getMappingsFile() {
+        return new File(getNode().get("mappings", ""));
+    }
 }

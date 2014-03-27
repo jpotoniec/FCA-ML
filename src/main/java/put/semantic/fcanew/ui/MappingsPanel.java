@@ -21,6 +21,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.BadLocationException;
 import put.semantic.fcanew.Attribute;
 import put.semantic.fcanew.Mappings;
+import put.semantic.fcanew.preferences.PreferencesProvider;
 
 abstract class DocumentListenerHelper implements DocumentListener {
 
@@ -188,7 +189,9 @@ public class MappingsPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void loadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadActionPerformed
+        fileChooser.setSelectedFile(PreferencesProvider.getInstance().getMappingsFile());
         if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            PreferencesProvider.getInstance().setMappingsFile(fileChooser.getSelectedFile());
             mappings.load(fileChooser.getSelectedFile());
             endpoint.setText(mappings.getEndpoint());
             prefixes.setText(mappings.getPrefixes());
@@ -197,6 +200,7 @@ public class MappingsPanel extends javax.swing.JPanel {
 
     private void saveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveActionPerformed
         if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            PreferencesProvider.getInstance().setMappingsFile(fileChooser.getSelectedFile());
             mappings.save(fileChooser.getSelectedFile());
         }
     }//GEN-LAST:event_saveActionPerformed
