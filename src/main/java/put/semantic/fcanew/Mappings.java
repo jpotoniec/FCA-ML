@@ -30,4 +30,7 @@ public interface Mappings {
     String getPrefixes();
 
     List<? extends Entry> getEntries();
+
+    String getPattern(Attribute a);
+
 }

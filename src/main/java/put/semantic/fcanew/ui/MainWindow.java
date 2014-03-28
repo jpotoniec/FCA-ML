@@ -70,6 +70,7 @@ import put.semantic.fcanew.ml.Classifier;
 import put.semantic.fcanew.ml.ConfusionMatrix;
 import put.semantic.fcanew.ml.features.FeatureCalculator;
 import put.semantic.fcanew.ml.features.impl.ConsistencyCalculator;
+import put.semantic.fcanew.ml.features.impl.EndpointCalculator;
 import put.semantic.fcanew.ml.features.impl.FollowingCalculators;
 import put.semantic.fcanew.ml.features.impl.RuleCalculator;
 import put.semantic.fcanew.ml.features.impl.SatCalculator;
@@ -167,6 +168,9 @@ public class MainWindow extends javax.swing.JFrame {
             this.calculators = availableCalculatorsModel.getChecked();
             List<String> features = new ArrayList<>();
             for (FeatureCalculator calc : calculators) {
+                if (calc instanceof EndpointCalculator) {
+                    ((EndpointCalculator) calc).setMappings(mappingsPanel1.getMappings());
+                }
                 features.addAll(calc.getNames());
             }
             classifier.setup(features.toArray(new String[0]));
@@ -300,9 +304,10 @@ public class MainWindow extends javax.swing.JFrame {
      * Creates new form MainWindow
      */
     public MainWindow() {
-        availableCalculatorsModel = new CheckBoxListModel<FeatureCalculator>(Arrays.asList(
+        availableCalculatorsModel = new CheckBoxListModel<>(Arrays.asList(
                 new RuleCalculator(),
                 new FollowingCalculators(),
+                new EndpointCalculator(),
                 new SatCalculator(),
                 new ConsistencyCalculator()), PreferencesProvider.getInstance().getCalculators());
         availableCalculatorsModel.addListDataListener(new ListDataListener() {

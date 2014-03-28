@@ -209,4 +209,14 @@ public class MappingsImpl implements Mappings {
         return Collections.unmodifiableList(entries);
     }
 
+    @Override
+    public String getPattern(Attribute a) {
+        for (Entry e : entries) {
+            if (e.getAttribute().equals(a)) {
+                return e.getPattern();
+            }
+        }
+        return null;
+    }
+
 }

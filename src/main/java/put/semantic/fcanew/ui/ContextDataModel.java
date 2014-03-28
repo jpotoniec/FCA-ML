@@ -43,7 +43,6 @@ public class ContextDataModel extends AbstractTableModel implements PartialConte
             try {
                 fireTableChanged(new TableModelEvent(this, 0, getRowCount(), col, TableModelEvent.UPDATE));
             } catch (IndexOutOfBoundsException ex) {
-                ex.printStackTrace();
             }
         }
 //        for (int row = 0; row < getRowCount(); ++row) {
