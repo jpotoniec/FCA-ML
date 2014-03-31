@@ -240,7 +240,7 @@
                           <Component id="useJFact" min="-2" max="-2" attributes="0"/>
                           <EmptySpace type="unrelated" max="-2" attributes="0"/>
                           <Component id="useHermit" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace pref="38" max="32767" attributes="0"/>
+                          <EmptySpace pref="40" max="32767" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -297,7 +297,7 @@
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="classifierToUse" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace pref="91" max="32767" attributes="0"/>
+                          <EmptySpace pref="93" max="32767" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -385,10 +385,11 @@
                                   <Group type="103" groupAlignment="0" attributes="0">
                                       <Component id="unusedToUsed" min="-2" max="-2" attributes="0"/>
                                       <Component id="usedToUnused" min="-2" max="-2" attributes="0"/>
+                                      <Component id="useAllMapped" min="-2" max="-2" attributes="0"/>
                                   </Group>
                               </Group>
                           </Group>
-                          <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
                               <Component id="jLabel6" min="-2" max="-2" attributes="0"/>
                               <Component id="jScrollPane10" min="-2" pref="368" max="-2" attributes="0"/>
@@ -436,7 +437,7 @@
                                                   <Component id="forcedToUsed" min="-2" max="-2" attributes="0"/>
                                                   <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                                               </Group>
-                                              <Component id="jScrollPane10" pref="549" max="32767" attributes="0"/>
+                                              <Component id="jScrollPane10" pref="545" max="32767" attributes="0"/>
                                           </Group>
                                       </Group>
                                   </Group>
@@ -447,6 +448,8 @@
                                   <Component id="unusedToUsed" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace type="separate" max="-2" attributes="0"/>
                                   <Component id="usedToUnused" min="-2" max="-2" attributes="0"/>
+                                  <EmptySpace type="separate" max="-2" attributes="0"/>
+                                  <Component id="useAllMapped" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace max="32767" attributes="0"/>
                               </Group>
                           </Group>
@@ -566,6 +569,15 @@
                   </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="forcedToUsedActionPerformed"/>
+                  </Events>
+                </Component>
+                <Component class="javax.swing.JButton" name="useAllMapped">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="M&gt;"/>
+                    <Property name="toolTipText" type="java.lang.String" value="Add all attributes with mappings"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="useAllMappedActionPerformed"/>
                   </Events>
                 </Component>
               </SubComponents>

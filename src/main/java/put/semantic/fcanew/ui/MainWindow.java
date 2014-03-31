@@ -373,6 +373,7 @@ public class MainWindow extends javax.swing.JFrame {
         usedToUnused = new javax.swing.JButton();
         usedToForced = new javax.swing.JButton();
         forcedToUsed = new javax.swing.JButton();
+        useAllMapped = new javax.swing.JButton();
         generateAttributes = new javax.swing.JButton();
         fcaTab = new javax.swing.JSplitPane();
         jSplitPane1 = new javax.swing.JSplitPane();
@@ -489,7 +490,7 @@ public class MainWindow extends javax.swing.JFrame {
                 .addComponent(useJFact)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(useHermit)
-                .addContainerGap(38, Short.MAX_VALUE))
+                .addContainerGap(40, Short.MAX_VALUE))
         );
 
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Classifier"));
@@ -510,7 +511,7 @@ public class MainWindow extends javax.swing.JFrame {
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(classifierToUse, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(91, Short.MAX_VALUE))
+                .addContainerGap(93, Short.MAX_VALUE))
         );
 
         jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder("Feature calculators"));
@@ -592,6 +593,14 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
 
+        useAllMapped.setText("M>");
+        useAllMapped.setToolTipText("Add all attributes with mappings");
+        useAllMapped.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                useAllMappedActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
         jPanel6.setLayout(jPanel6Layout);
         jPanel6Layout.setHorizontalGroup(
@@ -605,8 +614,9 @@ public class MainWindow extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(unusedToUsed)
-                            .addComponent(usedToUnused))))
-                .addGap(12, 12, 12)
+                            .addComponent(usedToUnused)
+                            .addComponent(useAllMapped))))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel6)
                     .addComponent(jScrollPane10, javax.swing.GroupLayout.PREFERRED_SIZE, 368, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -645,13 +655,15 @@ public class MainWindow extends javax.swing.JFrame {
                                         .addGap(18, 18, 18)
                                         .addComponent(forcedToUsed)
                                         .addGap(0, 0, Short.MAX_VALUE))
-                                    .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 549, Short.MAX_VALUE))))
+                                    .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 545, Short.MAX_VALUE))))
                         .addContainerGap())
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addGap(30, 30, 30)
                         .addComponent(unusedToUsed)
                         .addGap(18, 18, 18)
                         .addComponent(usedToUnused)
+                        .addGap(18, 18, 18)
+                        .addComponent(useAllMapped)
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
         );
 
@@ -1126,6 +1138,14 @@ public class MainWindow extends javax.swing.JFrame {
         moveAttributes(2, 1);
     }//GEN-LAST:event_forcedToUsedActionPerformed
 
+    private void useAllMappedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_useAllMappedActionPerformed
+        for (Mappings.Entry e : mappingsPanel1.getMappings().getEntries()) {
+            if (!e.getPattern().isEmpty()) {
+                attributes.move(e.getAttribute(), 0, 1);
+            }
+        }
+    }//GEN-LAST:event_useAllMappedActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -1212,6 +1232,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JList unusedAttributes;
     private javax.swing.JButton unusedToUsed;
     private javax.swing.JProgressBar updateProgressBar;
+    private javax.swing.JButton useAllMapped;
     private javax.swing.JRadioButton useHermit;
     private javax.swing.JRadioButton useJFact;
     private javax.swing.JRadioButton usePellet;
