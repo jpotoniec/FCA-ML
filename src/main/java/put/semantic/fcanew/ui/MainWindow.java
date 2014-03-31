@@ -278,6 +278,40 @@ public class MainWindow extends javax.swing.JFrame {
         }
 
     }
+
+    private ProgressListener progressListener = new ProgressListener() {
+
+        @Override
+        public void reset(final int max) {
+            if (!EventQueue.isDispatchThread()) {
+                EventQueue.invokeLater(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        reset(max);
+                    }
+                });
+            } else {
+                updateProgressBar.setMaximum(max);
+            }
+        }
+
+        @Override
+        public void update(final int status) {
+            if (!EventQueue.isDispatchThread()) {
+                EventQueue.invokeLater(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        update(status);
+                    }
+                });
+            } else {
+                updateProgressBar.setValue(status);
+            }
+        }
+    };
+
     private GuiExpert guiExpert;
     private OWLReasoner model;
     private MultiList<Attribute> attributes;
@@ -1015,17 +1049,7 @@ public class MainWindow extends javax.swing.JFrame {
             forced.addAll(getAttributes(1));
         }
         context = new PartialContext(new SimpleSetOfAttributes(getUsedAttributes()), model);
-        context.addProgressListener(new ProgressListener() {
-            @Override
-            public void reset(int max) {
-                updateProgressBar.setMaximum(max);
-            }
-
-            @Override
-            public void update(int status) {
-                updateProgressBar.setValue(status);
-            }
-        });
+        context.addProgressListener(progressListener);
         context.updateContext();
         contextTable.setRowSorter(new TableRowSorter<>());
         contextTable.setModel(new ContextDataModel(context));
