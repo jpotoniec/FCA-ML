@@ -10,6 +10,9 @@
 package put.semantic.fcanew.ui;
 
 import com.clarkparsia.pellet.owlapiv3.PelletReasoner;
+import com.hp.hpl.jena.query.QuerySolution;
+import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.sparql.engine.http.QueryEngineHTTP;
 import darrylbu.renderer.VerticalTableHeaderCellRenderer;
 import java.awt.EventQueue;
 import java.awt.Font;
@@ -64,6 +67,7 @@ import put.semantic.fcanew.Attribute;
 import put.semantic.fcanew.Expert;
 import put.semantic.fcanew.FCA;
 import put.semantic.fcanew.Implication;
+import put.semantic.fcanew.Mappings;
 import put.semantic.fcanew.PartialContext;
 import put.semantic.fcanew.ProgressListener;
 import put.semantic.fcanew.SimpleSetOfAttributes;
@@ -1043,7 +1047,82 @@ public class MainWindow extends javax.swing.JFrame {
         return result;
     }
 
-    private void startActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startActionPerformed
+    private List<Mappings.Entry> filterMappings(List<Attribute> attributes, Mappings mappings) {
+        List<Mappings.Entry> result = new ArrayList<>();
+        for (Mappings.Entry e : mappings.getEntries()) {
+            if (attributes.contains(e.getAttribute()) && !e.getPattern().isEmpty()) {
+                result.add(e);
+            }
+        }
+        return result;
+    }
+
+    private String getRepresentativeURI(Mappings.Entry m, Mappings mappings) {
+        String prefixes = mappings.getPrefixes();
+        String endpoint = mappings.getEndpoint();
+        String pattern = String.format("%s\nselect distinct ?x where {%s} limit 1", prefixes, m.getPattern());
+        System.err.println(pattern);
+        try {
+            QueryEngineHTTP qe = new QueryEngineHTTP(endpoint, pattern);
+            ResultSet result = qe.execSelect();
+            if (result.hasNext()) {
+                QuerySolution s = result.next();
+                String var = s.varNames().next();
+                String uri = s.getResource(var).getURI();
+                if (uri == null) {
+                    return "";
+                }
+                return uri;
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return "";
+    }
+
+    private boolean matches(String uri, Mappings.Entry m, Mappings mappings) {
+        String prefixes = mappings.getPrefixes();
+        String endpoint = mappings.getEndpoint();
+        String pattern = String.format("%s\nask where {%s} bindings ?x {(<%s>)}", prefixes, m.getPattern(), uri);
+        System.err.println(pattern);
+        try {
+            QueryEngineHTTP qe = new QueryEngineHTTP(endpoint, pattern);
+            return qe.execAsk();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return false;
+    }
+
+    private void extendPartialContext(String uri, List<Mappings.Entry> entries, Mappings mappings) {
+        OWLOntologyManager manager = model.getRootOntology().getOWLOntologyManager();
+        OWLDataFactory factory = manager.getOWLDataFactory();
+        OWLNamedIndividual ind = factory.getOWLNamedIndividual(IRI.create(uri));
+        for (Mappings.Entry e : entries) {
+            if (matches(uri, e, mappings)) {
+                System.err.printf("%s -> %s\n", uri, e.getAttribute());
+                manager.addAxiom(model.getRootOntology(), factory.getOWLClassAssertionAxiom(((ClassAttribute) e.getAttribute()).getOntClass(), ind));
+            }
+        }
+    }
+
+    private void seedKB(List<Attribute> attributes, Mappings mappings) {
+        List<Mappings.Entry> entries = filterMappings(attributes, mappings);
+        progressListener.reset(entries.size());
+        int n = 0;
+        for (Mappings.Entry m : entries) {
+            String uri = getRepresentativeURI(m, mappings);
+            assert uri != null;
+            if (uri.isEmpty()) {
+                continue;
+            }
+            extendPartialContext(uri, entries, mappings);
+            progressListener.update(++n);
+        }
+        model.flush();
+    }
+
+    private void continueStart() {
         final List<Attribute> forced = getAttributes(2);
         if (forced.isEmpty()) {
             forced.addAll(getAttributes(1));
@@ -1081,9 +1160,28 @@ public class MainWindow extends javax.swing.JFrame {
                 implicationText.setText("Bye-bye");
             }
         }.execute();
+    }
+
+    private void startActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startActionPerformed
         jTabbedPane1.setEnabledAt(jTabbedPane1.indexOfComponent(setupTab), false);
         jTabbedPane1.setEnabledAt(jTabbedPane1.indexOfComponent(fcaTab), true);
         jTabbedPane1.setSelectedComponent(fcaTab);
+        final List<Attribute> attrs = getUsedAttributes();
+        final Mappings mappings = mappingsPanel1.getMappings();
+        new SwingWorker() {
+
+            @Override
+            protected Object doInBackground() throws Exception {
+                seedKB(attrs, mappings);
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                continueStart();
+            }
+
+        }.execute();
     }//GEN-LAST:event_startActionPerformed
 
     private JFileChooser fileChooser = null;
