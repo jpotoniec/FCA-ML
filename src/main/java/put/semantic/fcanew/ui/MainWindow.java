@@ -999,6 +999,9 @@ public class MainWindow extends javax.swing.JFrame {
 
     private void startActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startActionPerformed
         final List<Attribute> forced = getAttributes(2);
+        if (forced.isEmpty()) {
+            forced.addAll(getAttributes(1));
+        }
         context = new PartialContext(new SimpleSetOfAttributes(getUsedAttributes()), model);
         context.addProgressListener(new ProgressListener() {
             @Override
