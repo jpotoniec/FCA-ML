@@ -3,6 +3,9 @@ package put.semantic.fcanew.mappings;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.sparql.engine.http.QueryEngineHTTP;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import put.semantic.fcanew.Attribute;
 
 /**
@@ -51,31 +54,45 @@ public class ARQDownloader implements Downloader {
     }
 
     @Override
-    public String getRepresentativeURI(Attribute... attr) {
+    public List<String> select(int limit, Attribute... attr) {
         String prefixes = mappings.getPrefixes();
         String endpoint = mappings.getEndpoint();
         String where = buildPattern(attr);
         if (where.isEmpty()) {
-            return "";
+            return Collections.EMPTY_LIST;
         }
-        String query = String.format("%s\nselect distinct ?x where {%s} limit 1", prefixes, where);
+        String query = String.format("%s\nselect distinct ?x where {%s}", prefixes, where);
+        if (limit > 0) {
+            query += String.format("\nlimit %d", limit);
+        }
         System.err.println(query);
         try {
+            List<String> result = new ArrayList<>();
             QueryEngineHTTP qe = new QueryEngineHTTP(endpoint, query);
-            ResultSet result = qe.execSelect();
-            if (result.hasNext()) {
-                QuerySolution s = result.next();
+            ResultSet queryResult = qe.execSelect();
+            while (queryResult.hasNext()) {
+                QuerySolution s = queryResult.next();
                 String var = s.varNames().next();
                 String uri = s.getResource(var).getURI();
-                if (uri == null) {
-                    return "";
+                if (uri != null) {
+                    result.add(uri);
                 }
-                return uri;
             }
+            return result;
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        return "";
+        return Collections.EMPTY_LIST;
+    }
+
+    @Override
+    public String getRepresentativeURI(Attribute... attr) {
+        List<String> select = select(1, attr);
+        if (select.isEmpty()) {
+            return "";
+        } else {
+            return select.get(0);
+        }
     }
 
     @Override

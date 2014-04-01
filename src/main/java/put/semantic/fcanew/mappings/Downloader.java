@@ -5,6 +5,7 @@
  */
 package put.semantic.fcanew.mappings;
 
+import java.util.List;
 import put.semantic.fcanew.Attribute;
 
 /**
@@ -22,6 +23,14 @@ public interface Downloader {
      * @return Valid URI or empty string.
      */
     public String getRepresentativeURI(Attribute... attr);
+
+    /**
+     *
+     * @param limit 0 means unlimited
+     * @param attr
+     * @return
+     */
+    public List<String> select(int limit, Attribute... attr);
 
     /**
      *

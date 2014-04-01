@@ -20,10 +20,12 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -425,6 +427,7 @@ public class MainWindow extends javax.swing.JFrame {
         filterText = new javax.swing.JTextField();
         resetFilter = new javax.swing.JButton();
         applyFilter = new javax.swing.JButton();
+        downloadSomething = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         featuresTable = new javax.swing.JTable();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -748,9 +751,7 @@ public class MainWindow extends javax.swing.JFrame {
                             .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(start)
-                            .addGroup(setupTabLayout.createSequentialGroup()
-                                .addComponent(generateAttributes)
-                                .addGap(28, 28, 28))))
+                            .addComponent(generateAttributes)))
                     .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addGap(18, 18, 18)
                 .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -809,6 +810,13 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
 
+        downloadSomething.setText("Download something");
+        downloadSomething.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                downloadSomethingActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -832,7 +840,10 @@ public class MainWindow extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(updateProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, 415, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(addNewButton)))
+                        .addComponent(addNewButton))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(downloadSomething)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -847,7 +858,9 @@ public class MainWindow extends javax.swing.JFrame {
                         .addComponent(rejectButton))
                     .addComponent(updateProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(addNewButton))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 46, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(downloadSomething)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 9, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
                     .addComponent(filterText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -970,35 +983,40 @@ public class MainWindow extends javax.swing.JFrame {
         guiExpert.reject();
     }//GEN-LAST:event_rejectButtonActionPerformed
 
-    private void addNewButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addNewButtonActionPerformed
-        final String uri = JOptionPane.showInputDialog(this, "Enter individual URI");
-        if (uri != null) {
-            new SwingWorker<Object, Object>() {
-
-                @Override
-                protected Object doInBackground() throws Exception {
-                    OWLOntologyManager m = model.getRootOntology().getOWLOntologyManager();
-                    OWLDataFactory f = m.getOWLDataFactory();
-                    OWLNamedIndividual ind = f.getOWLNamedIndividual(IRI.create(uri));
-                    if (!guiExpert.getCurrentImplication().getPremises().isEmpty()) {
-                        for (Attribute a : guiExpert.getCurrentImplication().getPremises()) {
-                            m.addAxiom(model.getRootOntology(), f.getOWLClassAssertionAxiom(((ClassAttribute) a).getOntClass(), ind));
-                        }
-                    } else {
-                        m.addAxiom(model.getRootOntology(), f.getOWLClassAssertionAxiom(model.getTopClassNode().getRepresentativeElement(), ind));
-                    }
-                    extendPartialContext(uri, getUsedAttributes());
-                    model.flush();
-                    context.updateContext();
-                    return null;
-                }
-
-                @Override
-                protected void done() {
-                    ((ContextDataModel) contextTable.getModel()).fireTableDataChanged();
-                }
-            }.execute();
+    private void addNew(final String uri) {
+        if (uri == null || uri.isEmpty()) {
+            return;
         }
+        new SwingWorker<Object, Object>() {
+
+            @Override
+            protected Object doInBackground() throws Exception {
+                OWLOntologyManager m = model.getRootOntology().getOWLOntologyManager();
+                OWLDataFactory f = m.getOWLDataFactory();
+                OWLNamedIndividual ind = f.getOWLNamedIndividual(IRI.create(uri));
+                if (!guiExpert.getCurrentImplication().getPremises().isEmpty()) {
+                    for (Attribute a : guiExpert.getCurrentImplication().getPremises()) {
+                        m.addAxiom(model.getRootOntology(), f.getOWLClassAssertionAxiom(((ClassAttribute) a).getOntClass(), ind));
+                    }
+                } else {
+                    m.addAxiom(model.getRootOntology(), f.getOWLClassAssertionAxiom(model.getTopClassNode().getRepresentativeElement(), ind));
+                }
+                extendPartialContext(uri, getUsedAttributes());
+                model.flush();
+                context.updateContext();
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                ((ContextDataModel) contextTable.getModel()).fireTableDataChanged();
+            }
+        }.execute();
+    }
+
+    private void addNewButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addNewButtonActionPerformed
+        String uri = JOptionPane.showInputDialog(this, "Enter individual URI");
+        addNew(uri);
     }//GEN-LAST:event_addNewButtonActionPerformed
 
     private List<String> getPossibleLabels(OWLNamedIndividual ind) {
@@ -1235,6 +1253,54 @@ public class MainWindow extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_useAllMappedActionPerformed
 
+    private Attribute[] toArray(Iterator<Attribute> i) {
+        List<Attribute> result = new ArrayList<>();
+        while (i.hasNext()) {
+            result.add(i.next());
+        }
+        return result.toArray(new Attribute[0]);
+    }
+
+    private void removeKnown(List<String> uris) {
+        Iterator<String> i = uris.iterator();
+        while (i.hasNext()) {
+            IRI iri = IRI.create(i.next());
+            if (model.getRootOntology().containsIndividualInSignature(iri, true)) {
+                i.remove();
+            }
+        }
+    }
+
+    private void downloadSomethingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_downloadSomethingActionPerformed
+        final Implication impl = guiExpert.getCurrentImplication();
+        new SwingWorker<List<String>, Object>() {
+
+            @Override
+            protected List<String> doInBackground() throws Exception {
+                List<String> result = downloader.select(0, toArray(impl.getPremises().iterator()));
+                removeKnown(result);
+                return result;
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    List<String> uris = get();
+                    if (uris.isEmpty()) {
+                        JOptionPane.showMessageDialog(MainWindow.this, "There are no objects fulifying premises and not available in considered context");
+                        return;
+                    }
+                    Object result = JOptionPane.showInputDialog(MainWindow.this, "Select URI", "Downloaded something", JOptionPane.PLAIN_MESSAGE, null, uris.toArray(new String[0]), uris.get(0));
+                    addNew((String) result);
+                } catch (InterruptedException | ExecutionException ex) {
+                    //should never happen
+                    Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+
+        }.execute();
+    }//GEN-LAST:event_downloadSomethingActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -1279,6 +1345,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JComboBox classifierToUse;
     private javax.swing.JTable confusionMatrix;
     private javax.swing.JTable contextTable;
+    private javax.swing.JButton downloadSomething;
     private javax.swing.JSplitPane fcaTab;
     private javax.swing.JTable featuresTable;
     private javax.swing.JList files;
