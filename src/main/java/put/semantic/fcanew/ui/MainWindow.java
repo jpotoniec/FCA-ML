@@ -971,19 +971,33 @@ public class MainWindow extends javax.swing.JFrame {
     }//GEN-LAST:event_rejectButtonActionPerformed
 
     private void addNewButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addNewButtonActionPerformed
-        String uri = JOptionPane.showInputDialog(this, "Enter individual URI");
+        final String uri = JOptionPane.showInputDialog(this, "Enter individual URI");
         if (uri != null) {
-            OWLOntologyManager m = model.getRootOntology().getOWLOntologyManager();
-            OWLDataFactory f = m.getOWLDataFactory();
-            OWLNamedIndividual ind = f.getOWLNamedIndividual(IRI.create(uri));
-            if (!guiExpert.getCurrentImplication().getPremises().isEmpty()) {
-                for (Attribute a : guiExpert.getCurrentImplication().getPremises()) {
-                    m.addAxiom(model.getRootOntology(), f.getOWLClassAssertionAxiom(((ClassAttribute) a).getOntClass(), ind));
+            new SwingWorker<Object, Object>() {
+
+                @Override
+                protected Object doInBackground() throws Exception {
+                    OWLOntologyManager m = model.getRootOntology().getOWLOntologyManager();
+                    OWLDataFactory f = m.getOWLDataFactory();
+                    OWLNamedIndividual ind = f.getOWLNamedIndividual(IRI.create(uri));
+                    if (!guiExpert.getCurrentImplication().getPremises().isEmpty()) {
+                        for (Attribute a : guiExpert.getCurrentImplication().getPremises()) {
+                            m.addAxiom(model.getRootOntology(), f.getOWLClassAssertionAxiom(((ClassAttribute) a).getOntClass(), ind));
+                        }
+                    } else {
+                        m.addAxiom(model.getRootOntology(), f.getOWLClassAssertionAxiom(model.getTopClassNode().getRepresentativeElement(), ind));
+                    }
+                    extendPartialContext(uri, filterMappings(getUsedAttributes(), mappingsPanel1.getMappings()), mappingsPanel1.getMappings());
+                    model.flush();
+                    context.updateContext();
+                    return null;
                 }
-            } else {
-                m.addAxiom(model.getRootOntology(), f.getOWLClassAssertionAxiom(model.getTopClassNode().getRepresentativeElement(), ind));
-            }
-            context.updateContext();
+
+                @Override
+                protected void done() {
+                    ((ContextDataModel) contextTable.getModel()).fireTableDataChanged();
+                }
+            }.execute();
         }
     }//GEN-LAST:event_addNewButtonActionPerformed
 
