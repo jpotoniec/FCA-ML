@@ -7,9 +7,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package put.semantic.fcanew;
+package put.semantic.fcanew.mappings;
 
 import java.util.List;
+import put.semantic.fcanew.Attribute;
 
 /**
  *

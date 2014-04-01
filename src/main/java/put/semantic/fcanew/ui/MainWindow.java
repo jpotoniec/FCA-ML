@@ -67,7 +67,7 @@ import put.semantic.fcanew.Attribute;
 import put.semantic.fcanew.Expert;
 import put.semantic.fcanew.FCA;
 import put.semantic.fcanew.Implication;
-import put.semantic.fcanew.Mappings;
+import put.semantic.fcanew.mappings.Mappings;
 import put.semantic.fcanew.PartialContext;
 import put.semantic.fcanew.ProgressListener;
 import put.semantic.fcanew.SimpleSetOfAttributes;

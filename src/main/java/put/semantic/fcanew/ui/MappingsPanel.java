@@ -18,7 +18,7 @@ import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.BadLocationException;
 import put.semantic.fcanew.Attribute;
-import put.semantic.fcanew.Mappings;
+import put.semantic.fcanew.mappings.Mappings;
 import put.semantic.fcanew.preferences.PreferencesProvider;
 
 abstract class DocumentListenerHelper implements DocumentListener {

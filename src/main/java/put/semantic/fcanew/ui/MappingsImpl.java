@@ -50,7 +50,7 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.tree.xpath.XPathExpressionEngine;
 import put.semantic.fcanew.Attribute;
-import put.semantic.fcanew.Mappings;
+import put.semantic.fcanew.mappings.Mappings;
 
 class EntryImpl implements Mappings.Entry {
 

@@ -13,7 +13,7 @@ import java.util.List;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import put.semantic.fcanew.Attribute;
 import put.semantic.fcanew.Implication;
-import put.semantic.fcanew.Mappings;
+import put.semantic.fcanew.mappings.Mappings;
 import put.semantic.fcanew.PartialContext;
 import put.semantic.fcanew.ReadOnlySubsetOfAttributes;
 import put.semantic.fcanew.ml.features.FeatureCalculator;
