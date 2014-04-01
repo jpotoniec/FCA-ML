@@ -5,6 +5,8 @@
  */
 package put.semantic.fcanew.mappings;
 
+import put.semantic.fcanew.Attribute;
+
 /**
  *
  * @author smaug
@@ -16,10 +18,16 @@ public interface Downloader {
     /**
      * Returns URI of object from remote KB specified in {@link getMappings()}
      *
-     * @param m Mapping
+     * @param attr
      * @return Valid URI or empty string.
      */
-    public String getRepresentativeURI(Mappings.Entry m);
+    public String getRepresentativeURI(Attribute... attr);
 
-    public boolean matches(String uri, Mappings.Entry m);
+    /**
+     *
+     * @param uri
+     * @param attributes
+     * @return length==attributes.length
+     */
+    public boolean[] matches(String uri, Attribute... attributes);
 }

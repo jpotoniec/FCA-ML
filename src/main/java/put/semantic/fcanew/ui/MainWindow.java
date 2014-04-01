@@ -987,7 +987,7 @@ public class MainWindow extends javax.swing.JFrame {
                     } else {
                         m.addAxiom(model.getRootOntology(), f.getOWLClassAssertionAxiom(model.getTopClassNode().getRepresentativeElement(), ind));
                     }
-                    extendPartialContext(uri, filterMappings(getUsedAttributes(), mappingsPanel1.getMappings()));
+                    extendPartialContext(uri, getUsedAttributes());
                     model.flush();
                     context.updateContext();
                     return null;
@@ -1061,38 +1061,29 @@ public class MainWindow extends javax.swing.JFrame {
         return result;
     }
 
-    private List<Mappings.Entry> filterMappings(List<Attribute> attributes, Mappings mappings) {
-        List<Mappings.Entry> result = new ArrayList<>();
-        for (Mappings.Entry e : mappings.getEntries()) {
-            if (attributes.contains(e.getAttribute()) && !e.getPattern().isEmpty()) {
-                result.add(e);
-            }
-        }
-        return result;
-    }
-
-    private void extendPartialContext(String uri, List<Mappings.Entry> entries) {
+    private void extendPartialContext(String uri, List<Attribute> attributes) {
         OWLOntologyManager manager = model.getRootOntology().getOWLOntologyManager();
         OWLDataFactory factory = manager.getOWLDataFactory();
         OWLNamedIndividual ind = factory.getOWLNamedIndividual(IRI.create(uri));
-        for (Mappings.Entry e : entries) {
-            if (downloader.matches(uri, e)) {
-                System.err.printf("%s -> %s\n", uri, e.getAttribute());
-                manager.addAxiom(model.getRootOntology(), factory.getOWLClassAssertionAxiom(((ClassAttribute) e.getAttribute()).getOntClass(), ind));
+        boolean[] matches = downloader.matches(uri, attributes.toArray(new Attribute[0]));
+        for (int i = 0; i < matches.length; ++i) {
+            if (matches[i]) {
+                ClassAttribute a = (ClassAttribute) attributes.get(i);
+                manager.addAxiom(model.getRootOntology(), factory.getOWLClassAssertionAxiom(a.getOntClass(), ind));
             }
         }
     }
 
-    private void seedKB(List<Mappings.Entry> entries) {
-        progressListener.reset(entries.size());
+    private void seedKB(List<Attribute> attributes) {
+        progressListener.reset(attributes.size());
         int n = 0;
-        for (Mappings.Entry m : entries) {
-            String uri = downloader.getRepresentativeURI(m);
+        for (Attribute a : attributes) {
+            String uri = downloader.getRepresentativeURI(a);
             assert uri != null;
             if (uri.isEmpty()) {
                 continue;
             }
-            extendPartialContext(uri, entries);
+            extendPartialContext(uri, attributes);
             progressListener.update(++n);
         }
         model.flush();
@@ -1142,15 +1133,13 @@ public class MainWindow extends javax.swing.JFrame {
         jTabbedPane1.setEnabledAt(jTabbedPane1.indexOfComponent(setupTab), false);
         jTabbedPane1.setEnabledAt(jTabbedPane1.indexOfComponent(fcaTab), true);
         jTabbedPane1.setSelectedComponent(fcaTab);
-        List<Attribute> attrs = getUsedAttributes();
-        Mappings mappings = mappingsPanel1.getMappings();
-        downloader = new ARQDownloader(mappings);
-        final List<Mappings.Entry> entries = filterMappings(attrs, mappings);
+        final List<Attribute> attrs = getUsedAttributes();
+        downloader = new ARQDownloader(mappingsPanel1.getMappings());
         new SwingWorker() {
 
             @Override
             protected Object doInBackground() throws Exception {
-                seedKB(entries);
+                seedKB(attrs);
                 return null;
             }
 
