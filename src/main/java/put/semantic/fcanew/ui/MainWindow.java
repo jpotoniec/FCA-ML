@@ -10,9 +10,6 @@
 package put.semantic.fcanew.ui;
 
 import com.clarkparsia.pellet.owlapiv3.PelletReasoner;
-import com.hp.hpl.jena.query.QuerySolution;
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.sparql.engine.http.QueryEngineHTTP;
 import darrylbu.renderer.VerticalTableHeaderCellRenderer;
 import java.awt.EventQueue;
 import java.awt.Font;
@@ -67,10 +64,12 @@ import put.semantic.fcanew.Attribute;
 import put.semantic.fcanew.Expert;
 import put.semantic.fcanew.FCA;
 import put.semantic.fcanew.Implication;
-import put.semantic.fcanew.mappings.Mappings;
 import put.semantic.fcanew.PartialContext;
 import put.semantic.fcanew.ProgressListener;
 import put.semantic.fcanew.SimpleSetOfAttributes;
+import put.semantic.fcanew.mappings.ARQDownloader;
+import put.semantic.fcanew.mappings.Downloader;
+import put.semantic.fcanew.mappings.Mappings;
 import put.semantic.fcanew.ml.Classifier;
 import put.semantic.fcanew.ml.ConfusionMatrix;
 import put.semantic.fcanew.ml.features.FeatureCalculator;
@@ -320,6 +319,7 @@ public class MainWindow extends javax.swing.JFrame {
     private OWLReasoner model;
     private MultiList<Attribute> attributes;
     private final CheckBoxListModel<FeatureCalculator> availableCalculatorsModel;
+    private Downloader downloader;
 
     private void registerImplication(Implication i, double p, Expert.Decision d) {
         ((HistoryTableModel) history.getModel()).add(i, p, d);
@@ -987,7 +987,7 @@ public class MainWindow extends javax.swing.JFrame {
                     } else {
                         m.addAxiom(model.getRootOntology(), f.getOWLClassAssertionAxiom(model.getTopClassNode().getRepresentativeElement(), ind));
                     }
-                    extendPartialContext(uri, filterMappings(getUsedAttributes(), mappingsPanel1.getMappings()), mappingsPanel1.getMappings());
+                    extendPartialContext(uri, filterMappings(getUsedAttributes(), mappingsPanel1.getMappings()));
                     model.flush();
                     context.updateContext();
                     return null;
@@ -1071,66 +1071,28 @@ public class MainWindow extends javax.swing.JFrame {
         return result;
     }
 
-    private String getRepresentativeURI(Mappings.Entry m, Mappings mappings) {
-        String prefixes = mappings.getPrefixes();
-        String endpoint = mappings.getEndpoint();
-        String pattern = String.format("%s\nselect distinct ?x where {%s} limit 1", prefixes, m.getPattern());
-        System.err.println(pattern);
-        try {
-            QueryEngineHTTP qe = new QueryEngineHTTP(endpoint, pattern);
-            ResultSet result = qe.execSelect();
-            if (result.hasNext()) {
-                QuerySolution s = result.next();
-                String var = s.varNames().next();
-                String uri = s.getResource(var).getURI();
-                if (uri == null) {
-                    return "";
-                }
-                return uri;
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return "";
-    }
-
-    private boolean matches(String uri, Mappings.Entry m, Mappings mappings) {
-        String prefixes = mappings.getPrefixes();
-        String endpoint = mappings.getEndpoint();
-        String pattern = String.format("%s\nask where {%s} bindings ?x {(<%s>)}", prefixes, m.getPattern(), uri);
-        System.err.println(pattern);
-        try {
-            QueryEngineHTTP qe = new QueryEngineHTTP(endpoint, pattern);
-            return qe.execAsk();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return false;
-    }
-
-    private void extendPartialContext(String uri, List<Mappings.Entry> entries, Mappings mappings) {
+    private void extendPartialContext(String uri, List<Mappings.Entry> entries) {
         OWLOntologyManager manager = model.getRootOntology().getOWLOntologyManager();
         OWLDataFactory factory = manager.getOWLDataFactory();
         OWLNamedIndividual ind = factory.getOWLNamedIndividual(IRI.create(uri));
         for (Mappings.Entry e : entries) {
-            if (matches(uri, e, mappings)) {
+            if (downloader.matches(uri, e)) {
                 System.err.printf("%s -> %s\n", uri, e.getAttribute());
                 manager.addAxiom(model.getRootOntology(), factory.getOWLClassAssertionAxiom(((ClassAttribute) e.getAttribute()).getOntClass(), ind));
             }
         }
     }
 
-    private void seedKB(List<Attribute> attributes, Mappings mappings) {
-        List<Mappings.Entry> entries = filterMappings(attributes, mappings);
+    private void seedKB(List<Mappings.Entry> entries) {
         progressListener.reset(entries.size());
         int n = 0;
         for (Mappings.Entry m : entries) {
-            String uri = getRepresentativeURI(m, mappings);
+            String uri = downloader.getRepresentativeURI(m);
             assert uri != null;
             if (uri.isEmpty()) {
                 continue;
             }
-            extendPartialContext(uri, entries, mappings);
+            extendPartialContext(uri, entries);
             progressListener.update(++n);
         }
         model.flush();
@@ -1180,13 +1142,15 @@ public class MainWindow extends javax.swing.JFrame {
         jTabbedPane1.setEnabledAt(jTabbedPane1.indexOfComponent(setupTab), false);
         jTabbedPane1.setEnabledAt(jTabbedPane1.indexOfComponent(fcaTab), true);
         jTabbedPane1.setSelectedComponent(fcaTab);
-        final List<Attribute> attrs = getUsedAttributes();
-        final Mappings mappings = mappingsPanel1.getMappings();
+        List<Attribute> attrs = getUsedAttributes();
+        Mappings mappings = mappingsPanel1.getMappings();
+        downloader = new ARQDownloader(mappings);
+        final List<Mappings.Entry> entries = filterMappings(attrs, mappings);
         new SwingWorker() {
 
             @Override
             protected Object doInBackground() throws Exception {
-                seedKB(attrs, mappings);
+                seedKB(entries);
                 return null;
             }
 
