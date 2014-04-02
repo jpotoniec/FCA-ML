@@ -66,6 +66,7 @@ import put.semantic.fcanew.Attribute;
 import put.semantic.fcanew.Expert;
 import put.semantic.fcanew.FCA;
 import put.semantic.fcanew.Implication;
+import put.semantic.fcanew.POD;
 import put.semantic.fcanew.PartialContext;
 import put.semantic.fcanew.ProgressListener;
 import put.semantic.fcanew.SimpleSetOfAttributes;
@@ -246,43 +247,70 @@ public class MainWindow extends javax.swing.JFrame {
         }
 
         private void ask(final Implication impl) {
-            final Map<String, Double> features = getFeatures(impl);
-            clResult = classifier.classify(features);
-            highlightButton(shouldAccept());
-            features.put("classifier", clResult);
-            synchronized (lock) {
-                lastFeatures = features;
-            }
             EventQueue.invokeLater(new Runnable() {
                 @Override
                 public void run() {
                     currentImplication = impl;
-                    ((ContextDataModel) contextTable.getModel()).setCurrentImplication(impl);
-                    DefaultTableModel model = new DefaultTableModel(new String[]{"feature", "value"}, 0);
-                    for (Map.Entry<String, Double> f : features.entrySet()) {
-                        model.addRow(new Object[]{f.getKey(), f.getValue()});
-                    }
-                    featuresTable.setModel(model);
+                    ((ContextDataModel) contextTable.getModel()).setCurrentImplication(currentImplication);
                     String s = "";
                     s += "<br>Justification: <br><pre>" + classifier.getJustification() + "</pre>";
                     implicationText.setText("<html>" + impl.toString() + "<br>" + s + "</html>");
                     setEnabled(true);
+                    refreshFeatures();
                 }
             });
-            if (features.get("follows from KB") == 1) {
-                EventQueue.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        acceptButton.doClick();
-                    }
-                });
-            }
         }
 
         public Implication getCurrentImplication() {
             return currentImplication;
         }
 
+        private void refreshFeatures() {
+            if (!EventQueue.isDispatchThread()) {
+                EventQueue.invokeLater(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        refreshFeatures();
+                    }
+                });
+                return;
+            }
+            assert EventQueue.isDispatchThread();
+            new SwingWorker<Map<String, Double>, Object>() {
+
+                @Override
+                protected Map<String, Double> doInBackground() throws Exception {
+                    return getFeatures(currentImplication);
+                }
+
+                @Override
+                protected void done() {
+                    try {
+                        final Map<String, Double> features = get();
+                        clResult = classifier.classify(features);
+                        highlightButton(shouldAccept());
+                        features.put("classifier", clResult);
+                        synchronized (lock) {
+                            lastFeatures = features;
+                        }
+                        DefaultTableModel model = new DefaultTableModel(new String[]{"feature", "value"}, 0);
+                        for (Map.Entry<String, Double> f : features.entrySet()) {
+                            model.addRow(new Object[]{f.getKey(), f.getValue()});
+                        }
+                        featuresTable.setModel(model);
+                        if (features.get("follows from KB") == 1) {
+                            acceptButton.doClick();
+                        }
+                    } catch (InterruptedException | ExecutionException ex) {
+                        //impossible
+                        Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+
+            }.execute();
+
+        }
     }
 
     private ProgressListener progressListener = new ProgressListener() {
@@ -1120,6 +1148,13 @@ public class MainWindow extends javax.swing.JFrame {
         contextTable.setRowSorter(new TableRowSorter<>());
         contextTable.setModel(new ContextDataModel(context));
         contextTable.setDefaultRenderer(Object.class, new PODCellRenderer(model));
+        context.addContextChangedListener(new PartialContext.ContextChangedListener() {
+
+            @Override
+            public void contextChanged(PartialContext context, POD cause) {
+                guiExpert.refreshFeatures();
+            }
+        });
         Enumeration<TableColumn> e = contextTable.getColumnModel().getColumns();
         JComboBox comboBox = new JComboBox(new Object[]{"+", "-", " "});
         while (e.hasMoreElements()) {
