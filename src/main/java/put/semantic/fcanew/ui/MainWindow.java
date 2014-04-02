@@ -14,6 +14,7 @@ import darrylbu.renderer.VerticalTableHeaderCellRenderer;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -469,6 +470,8 @@ public class MainWindow extends javax.swing.JFrame {
         confusionMatrix = new javax.swing.JTable();
         jScrollPane8 = new javax.swing.JScrollPane();
         history = new javax.swing.JTable();
+        loadInstances = new javax.swing.JButton();
+        saveInstances = new javax.swing.JButton();
         mappingsPanel1 = new put.semantic.fcanew.ui.MappingsPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -956,6 +959,20 @@ public class MainWindow extends javax.swing.JFrame {
         history.setModel(new HistoryTableModel());
         jScrollPane8.setViewportView(history);
 
+        loadInstances.setText("Load instances");
+        loadInstances.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                loadInstancesActionPerformed(evt);
+            }
+        });
+
+        saveInstances.setText("Save instances");
+        saveInstances.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                saveInstancesActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout classifierTabLayout = new javax.swing.GroupLayout(classifierTab);
         classifierTab.setLayout(classifierTabLayout);
         classifierTabLayout.setHorizontalGroup(
@@ -967,7 +984,12 @@ public class MainWindow extends javax.swing.JFrame {
                     .addGroup(classifierTabLayout.createSequentialGroup()
                         .addComponent(jScrollPane6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
-                        .addComponent(jScrollPane8)))
+                        .addComponent(jScrollPane8))
+                    .addGroup(classifierTabLayout.createSequentialGroup()
+                        .addComponent(loadInstances)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(saveInstances)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         classifierTabLayout.setVerticalGroup(
@@ -977,8 +999,12 @@ public class MainWindow extends javax.swing.JFrame {
                 .addGroup(classifierTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 205, Short.MAX_VALUE)
                     .addComponent(jScrollPane6, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
-                .addGap(18, 18, 18)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 766, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(classifierTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(loadInstances)
+                    .addComponent(saveInstances))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 735, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1338,6 +1364,35 @@ public class MainWindow extends javax.swing.JFrame {
         }.execute();
     }//GEN-LAST:event_downloadSomethingActionPerformed
 
+    private JFileChooser instancesFileChooser;
+
+    {
+        instancesFileChooser = new JFileChooser();
+        instancesFileChooser.setFileFilter(new FileNameExtensionFilter("Weka dataset", "arff"));
+    }
+
+    private void loadInstancesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadInstancesActionPerformed
+        if (instancesFileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            try {
+                guiExpert.classifier.loadExamples(instancesFileChooser.getSelectedFile());
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, ex.toString());
+                ex.printStackTrace();
+            }
+        }
+    }//GEN-LAST:event_loadInstancesActionPerformed
+
+    private void saveInstancesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveInstancesActionPerformed
+        if (instancesFileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            try {
+                guiExpert.classifier.saveExamples(instancesFileChooser.getSelectedFile());
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, ex.toString());
+                ex.printStackTrace();
+            }
+        }
+    }//GEN-LAST:event_saveInstancesActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -1415,11 +1470,13 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable learningExamplesTable;
+    private javax.swing.JButton loadInstances;
     private put.semantic.fcanew.ui.MappingsPanel mappingsPanel1;
     private javax.swing.ButtonGroup reasoners;
     private javax.swing.JButton rejectButton;
     private javax.swing.JButton removeFile;
     private javax.swing.JButton resetFilter;
+    private javax.swing.JButton saveInstances;
     private javax.swing.JPanel setupTab;
     private javax.swing.JButton start;
     private javax.swing.JList unusedAttributes;

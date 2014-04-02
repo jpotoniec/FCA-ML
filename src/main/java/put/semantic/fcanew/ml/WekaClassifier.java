@@ -5,6 +5,8 @@
  */
 package put.semantic.fcanew.ml;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +19,8 @@ import weka.core.Attribute;
 import weka.core.FastVector;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.converters.ArffLoader;
+import weka.core.converters.ArffSaver;
 
 public class WekaClassifier extends put.semantic.fcanew.ml.AbstractClassifier {
 
@@ -121,6 +125,52 @@ public class WekaClassifier extends put.semantic.fcanew.ml.AbstractClassifier {
     @Override
     public String toString() {
         return "Weka: " + classifier.getClass().getSimpleName();
+    }
+
+    public static Instance convert(Instance input, Instances src, Instances dst) {
+        Instance result = new Instance(dst.numAttributes());
+        result.setDataset(dst);
+        for (int i = 0; i < dst.numAttributes(); ++i) {
+            Attribute srcAttr = src.attribute(dst.attribute(i).name());
+            if (srcAttr.isNumeric()) {
+                double val = input.value(srcAttr);
+                result.setValue(i, val);
+            } else {
+                String val = input.stringValue(srcAttr);
+                result.setValue(i, val);
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public void saveExamples(File f) throws IOException {
+        ArffSaver s = new ArffSaver();
+        s.setFile(f);
+        s.setInstances(instances);
+        s.writeBatch();
+    }
+
+    @Override
+    public void loadExamples(File f) throws IOException {
+        ArffLoader l = new ArffLoader();
+        l.setFile(f);
+        Instances structure = l.getStructure();
+        Instance i;
+        while ((i = l.getNextInstance(structure)) != null) {
+            if (!instances.checkInstance(i)) {
+                i = convert(i, structure, instances);
+            } else {
+                i.setDataset(instances);
+            }
+            if (instances.checkInstance(i)) {
+                instances.add(i);
+            } else {
+                System.err.println("Ignoring incompatible instance");
+            }
+        }
+        updateModel();
+        tableModel.fireTableDataChanged();
     }
 
 }

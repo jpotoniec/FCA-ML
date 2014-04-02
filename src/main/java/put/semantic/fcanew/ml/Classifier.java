@@ -5,6 +5,8 @@
  */
 package put.semantic.fcanew.ml;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import javax.swing.table.TableModel;
@@ -24,4 +26,8 @@ public interface Classifier {
     public void setup(String... attributes);
 
     public TableModel getExamplesTableModel();
+
+    public void saveExamples(File f) throws IOException;
+
+    public void loadExamples(File f) throws IOException;
 }

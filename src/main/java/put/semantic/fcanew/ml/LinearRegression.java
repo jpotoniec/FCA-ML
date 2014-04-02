@@ -9,6 +9,8 @@
  */
 package put.semantic.fcanew.ml;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -117,6 +119,16 @@ public class LinearRegression extends AbstractClassifier {
     @Override
     public String toString() {
         return "Apache Commons Linear Regression";
+    }
+
+    @Override
+    public void saveExamples(File f) throws IOException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void loadExamples(File f) throws IOException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
 }
