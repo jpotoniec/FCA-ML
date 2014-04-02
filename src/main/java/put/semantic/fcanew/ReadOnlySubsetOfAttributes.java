@@ -139,4 +139,8 @@ public abstract class ReadOnlySubsetOfAttributes implements Iterable<Attribute> 
         return hash;
     }
 
+    public double size() {
+        return this.indexes.size();
+    }
+
 }

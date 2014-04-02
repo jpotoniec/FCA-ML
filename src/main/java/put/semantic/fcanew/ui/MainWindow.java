@@ -78,6 +78,7 @@ import put.semantic.fcanew.ml.features.FeatureCalculator;
 import put.semantic.fcanew.ml.features.impl.ConsistencyCalculator;
 import put.semantic.fcanew.ml.features.impl.EndpointCalculator;
 import put.semantic.fcanew.ml.features.impl.FollowingCalculators;
+import put.semantic.fcanew.ml.features.impl.ImplicationShapeCalculator;
 import put.semantic.fcanew.ml.features.impl.RuleCalculator;
 import put.semantic.fcanew.ml.features.impl.SatCalculator;
 import put.semantic.fcanew.ml.features.values.FeatureValue;
@@ -334,6 +335,7 @@ public class MainWindow extends javax.swing.JFrame {
         availableCalculatorsModel = new CheckBoxListModel<>(Arrays.asList(
                 new RuleCalculator(),
                 new FollowingCalculators(),
+                new ImplicationShapeCalculator(),
                 new EndpointCalculator(),
                 new SatCalculator(),
                 new ConsistencyCalculator()), PreferencesProvider.getInstance().getCalculators());
