@@ -26,17 +26,22 @@ public class PartialContext {
 
     public static interface ContextChangedListener extends EventListener {
 
-        public void contextChanged(PartialContext context);
+        public void contextChanged(PartialContext context, POD cause);
     }
     private List<POD> pods;
     private SetOfAttributes attributes;
     private OWLReasoner model;
     private List<ContextChangedListener> contextChangedListeners = new ArrayList<>();
     private boolean contextChanged = false;
+    private boolean postponeChangesPropagation = false;
     private POD.PODChangedListener changeListener = new POD.PODChangedListener() {
         @Override
         public void podChanged(POD pod) {
-            contextChanged = true;
+            if (postponeChangesPropagation) {
+                contextChanged = true;
+            } else {
+                fireContextChanged(pod);
+            }
         }
     };
     private List<ProgressListener> progessListeners = new ArrayList<ProgressListener>();
@@ -92,9 +97,10 @@ public class PartialContext {
         contextChangedListeners.remove(listener);
     }
 
-    protected void fireContextChanged() {
+    protected void fireContextChanged(POD pod) {
+        contextChanged = false;
         for (ContextChangedListener listener : contextChangedListeners) {
-            listener.contextChanged(this);
+            listener.contextChanged(this, pod);
         }
     }
 
@@ -112,10 +118,10 @@ public class PartialContext {
     public void update(Implication implication) {
         updateModel(implication);
         updateContext();
-        fireContextChanged();
     }
 
     public void updateContext() {
+        postponeChangesPropagation = true;
         model.precomputeInferences(InferenceType.CLASS_ASSERTIONS, InferenceType.CLASS_HIERARCHY, InferenceType.OBJECT_PROPERTY_ASSERTIONS, InferenceType.OBJECT_PROPERTY_HIERARCHY);
         Map<OWLNamedIndividual, SubsetOfAttributes> p = new HashMap<>();
         Map<OWLNamedIndividual, SubsetOfAttributes> n = new HashMap<>();
@@ -148,6 +154,10 @@ public class PartialContext {
         for (OWLNamedIndividual i : p.keySet()) {
             POD pod = new POD(i, getAttributes(), model, p.get(i), n.get(i));
             addPOD(pod);
+        }
+        postponeChangesPropagation = false;
+        if (contextChanged) {
+            fireContextChanged(null);
         }
     }
 

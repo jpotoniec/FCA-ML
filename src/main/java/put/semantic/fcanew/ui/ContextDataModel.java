@@ -103,8 +103,17 @@ public class ContextDataModel extends AbstractTableModel implements PartialConte
     }
 
     @Override
-    public void contextChanged(PartialContext context) {
-        fireTableDataChanged();
+    public void contextChanged(PartialContext context, POD pod) {
+        if (pod == null) {
+            fireTableDataChanged();
+        } else {
+            int row = context.getPODs().indexOf(pod);
+            if (row < getRowCount()) {
+                fireTableRowsUpdated(row, row);
+            } else {
+                fireTableRowsInserted(row, row);
+            }
+        }
     }
 
     @Override
@@ -119,7 +128,6 @@ public class ContextDataModel extends AbstractTableModel implements PartialConte
         }
         POD pod = context.getPODs().get(rowIndex);
         Attribute a = context.getAttributes().get(getAttributeIndex(columnIndex));
-        System.out.printf("'%s'\n", aValue.toString());
         switch (aValue.toString()) {
             case "+":
                 pod.setPositive(a);
@@ -131,6 +139,5 @@ public class ContextDataModel extends AbstractTableModel implements PartialConte
                 pod.setUnknown(a);
                 break;
         }
-        fireTableRowsUpdated(rowIndex, rowIndex);
     }
 }
