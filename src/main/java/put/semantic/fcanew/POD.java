@@ -110,8 +110,8 @@ public class POD {
         ClassAttribute attr = (ClassAttribute) a;
         OWLClassAssertionAxiom complAxiom = reasoner.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLClassAssertionAxiom(attr.getComplement(), ind);
         OWLClassAssertionAxiom normalAxiom = reasoner.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLClassAssertionAxiom(attr.getOntClass(), ind);
-        reasoner.getRootOntology().getOWLOntologyManager().addAxiom(reasoner.getRootOntology(), complAxiom);
         reasoner.getRootOntology().getOWLOntologyManager().removeAxiom(reasoner.getRootOntology(), normalAxiom);
+        reasoner.getRootOntology().getOWLOntologyManager().addAxiom(reasoner.getRootOntology(), complAxiom);
         reasoner.flush();
         update();
     }
