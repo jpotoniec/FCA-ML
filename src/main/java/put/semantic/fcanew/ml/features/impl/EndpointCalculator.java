@@ -61,7 +61,7 @@ public class EndpointCalculator implements FeatureCalculator {
 
     @Override
     public List<String> getNames() {
-        return Arrays.asList("sparql-p", "sparql-c", "sparql-pc");
+        return Arrays.asList("sparql: p", "sparql: c", "sparql: pc", "sparql: p/pc", "sparql: c/pc");
     }
 
     protected double count(String pattern) {
@@ -98,7 +98,9 @@ public class EndpointCalculator implements FeatureCalculator {
         }
         return Arrays.asList(new NumericFeatureValue(p),
                 new NumericFeatureValue(c),
-                new NumericFeatureValue(pc)
+                new NumericFeatureValue(pc),
+                new NumericFeatureValue(p / pc),
+                new NumericFeatureValue(c / pc)
         );
     }
 
