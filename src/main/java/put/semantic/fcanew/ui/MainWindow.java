@@ -253,9 +253,8 @@ public class MainWindow extends javax.swing.JFrame {
                 public void run() {
                     currentImplication = impl;
                     ((ContextDataModel) contextTable.getModel()).setCurrentImplication(currentImplication);
-                    String s = "";
-                    s += "<br>Justification: <br><pre>" + classifier.getJustification() + "</pre>";
-                    implicationText.setText("<html>" + impl.toString() + "<br>" + s + "</html>");
+                    justificationText.setText(String.format("<html><br>Justification: <br><pre>%s</pre></html>", classifier.getJustification()));
+                    implicationText.setText(String.format("<html>%s</html>", impl.toString()));
                     setEnabled(true);
                     refreshFeatures();
                 }
@@ -459,6 +458,8 @@ public class MainWindow extends javax.swing.JFrame {
         resetFilter = new javax.swing.JButton();
         applyFilter = new javax.swing.JButton();
         downloadSomething = new javax.swing.JButton();
+        jScrollPane4 = new javax.swing.JScrollPane();
+        justificationText = new javax.swing.JLabel();
         jScrollPane2 = new javax.swing.JScrollPane();
         featuresTable = new javax.swing.JTable();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -729,7 +730,7 @@ public class MainWindow extends javax.swing.JFrame {
                                         .addGap(18, 18, 18)
                                         .addComponent(forcedToUsed)
                                         .addGap(0, 0, Short.MAX_VALUE))
-                                    .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 545, Short.MAX_VALUE))))
+                                    .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 548, Short.MAX_VALUE))))
                         .addContainerGap())
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addGap(30, 30, 30)
@@ -793,7 +794,7 @@ public class MainWindow extends javax.swing.JFrame {
 
         jTabbedPane1.addTab("Setup", setupTab);
 
-        fcaTab.setDividerLocation(150);
+        fcaTab.setDividerLocation(250);
         fcaTab.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
 
         jSplitPane1.setDividerLocation(730);
@@ -850,6 +851,9 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
 
+        justificationText.setText("jLabel1");
+        jScrollPane4.setViewportView(justificationText);
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -875,7 +879,8 @@ public class MainWindow extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(addNewButton))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(jScrollPane4)
+                        .addGap(18, 18, 18)
                         .addComponent(downloadSomething)))
                 .addContainerGap())
         );
@@ -892,8 +897,12 @@ public class MainWindow extends javax.swing.JFrame {
                     .addComponent(updateProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(addNewButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(downloadSomething)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 9, Short.MAX_VALUE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(downloadSomething)
+                        .addGap(0, 91, Short.MAX_VALUE))
+                    .addComponent(jScrollPane4))
+                .addGap(18, 18, 18)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
                     .addComponent(filterText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1004,7 +1013,7 @@ public class MainWindow extends javax.swing.JFrame {
                     .addComponent(loadInstances)
                     .addComponent(saveInstances))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 735, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 736, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1462,6 +1471,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane11;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JScrollPane jScrollPane5;
     private javax.swing.JScrollPane jScrollPane6;
     private javax.swing.JScrollPane jScrollPane7;
@@ -1469,6 +1479,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane9;
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JLabel justificationText;
     private javax.swing.JTable learningExamplesTable;
     private javax.swing.JButton loadInstances;
     private put.semantic.fcanew.ui.MappingsPanel mappingsPanel1;

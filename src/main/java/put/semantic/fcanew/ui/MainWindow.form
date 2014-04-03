@@ -434,7 +434,7 @@
                                                   <Component id="forcedToUsed" min="-2" max="-2" attributes="0"/>
                                                   <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                                               </Group>
-                                              <Component id="jScrollPane10" pref="545" max="32767" attributes="0"/>
+                                              <Component id="jScrollPane10" pref="548" max="32767" attributes="0"/>
                                           </Group>
                                       </Group>
                                   </Group>
@@ -591,7 +591,7 @@
         </Container>
         <Container class="javax.swing.JSplitPane" name="fcaTab">
           <Properties>
-            <Property name="dividerLocation" type="int" value="150"/>
+            <Property name="dividerLocation" type="int" value="250"/>
             <Property name="orientation" type="int" value="0"/>
           </Properties>
           <Constraints>
@@ -649,7 +649,8 @@
                                       <Component id="addNewButton" min="-2" max="-2" attributes="0"/>
                                   </Group>
                                   <Group type="102" alignment="1" attributes="0">
-                                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                                      <Component id="jScrollPane4" max="32767" attributes="0"/>
+                                      <EmptySpace type="separate" max="-2" attributes="0"/>
                                       <Component id="downloadSomething" min="-2" max="-2" attributes="0"/>
                                   </Group>
                               </Group>
@@ -672,8 +673,14 @@
                                   <Component id="addNewButton" min="-2" max="-2" attributes="0"/>
                               </Group>
                               <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                              <Component id="downloadSomething" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace pref="9" max="32767" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Group type="102" attributes="0">
+                                      <Component id="downloadSomething" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace min="0" pref="91" max="32767" attributes="0"/>
+                                  </Group>
+                                  <Component id="jScrollPane4" max="32767" attributes="0"/>
+                              </Group>
+                              <EmptySpace type="separate" max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="3" attributes="0">
                                   <Component id="jLabel4" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="filterText" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -751,6 +758,17 @@
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="downloadSomethingActionPerformed"/>
                       </Events>
                     </Component>
+                    <Container class="javax.swing.JScrollPane" name="jScrollPane4">
+
+                      <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
+                      <SubComponents>
+                        <Component class="javax.swing.JLabel" name="justificationText">
+                          <Properties>
+                            <Property name="text" type="java.lang.String" value="jLabel1"/>
+                          </Properties>
+                        </Component>
+                      </SubComponents>
+                    </Container>
                   </SubComponents>
                 </Container>
                 <Container class="javax.swing.JScrollPane" name="jScrollPane2">
@@ -854,7 +872,7 @@
                           <Component id="saveInstances" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                      <Component id="jScrollPane3" pref="735" max="32767" attributes="0"/>
+                      <Component id="jScrollPane3" pref="736" max="32767" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                   </Group>
               </Group>
