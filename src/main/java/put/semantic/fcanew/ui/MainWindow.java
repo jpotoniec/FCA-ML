@@ -1183,13 +1183,6 @@ public class MainWindow extends javax.swing.JFrame {
         contextTable.setRowSorter(new TableRowSorter<>());
         contextTable.setModel(new ContextDataModel(context));
         contextTable.setDefaultRenderer(Object.class, new PODCellRenderer(model));
-        context.addContextChangedListener(new PartialContext.ContextChangedListener() {
-
-            @Override
-            public void contextChanged(PartialContext context, POD cause) {
-                guiExpert.refreshFeatures();
-            }
-        });
         Enumeration<TableColumn> e = contextTable.getColumnModel().getColumns();
         JComboBox comboBox = new JComboBox(new Object[]{"+", "-", " "});
         while (e.hasMoreElements()) {
