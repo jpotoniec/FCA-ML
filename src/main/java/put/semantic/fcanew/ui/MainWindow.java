@@ -412,6 +412,7 @@ public class MainWindow extends javax.swing.JFrame {
                 return calc.getClass().getSimpleName() + ": " + StringUtils.join(calc.getNames(), ", ");
             }
         });
+        CSVExporter.addToAllTables(this);
     }
 
     /**
