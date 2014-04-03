@@ -70,7 +70,6 @@ import put.semantic.fcanew.Implication;
 import put.semantic.fcanew.POD;
 import put.semantic.fcanew.PartialContext;
 import put.semantic.fcanew.ProgressListener;
-import put.semantic.fcanew.ReadOnlySubsetOfAttributes;
 import put.semantic.fcanew.SimpleSetOfAttributes;
 import put.semantic.fcanew.mappings.ARQDownloader;
 import put.semantic.fcanew.mappings.Downloader;
@@ -221,7 +220,7 @@ public class MainWindow extends javax.swing.JFrame {
 
         private void reject() {
             if (!currentImplication.isRefutedBy(context)) {
-                generateCounterexample();
+                return;
             }
             setEnabled(false);
             ((ConfusionMatrix) confusionMatrix.getModel()).add(shouldAccept(), false);
@@ -367,43 +366,6 @@ public class MainWindow extends javax.swing.JFrame {
 
     private double getIgnoreTreshold() {
         return ((double) (ignoreTreshold.getValue() - ignoreTreshold.getMinimum())) / (ignoreTreshold.getMaximum() - ignoreTreshold.getMinimum());
-    }
-
-    private int counterexamples = 0;
-
-    private void generateCounterexample() {
-        new SwingWorker<Object, Object>() {
-
-            private Set<OWLClassExpression> toSet(ReadOnlySubsetOfAttributes attrs) {
-                Set<OWLClassExpression> result = new HashSet<>();
-                for (Attribute a : attrs) {
-                    result.add(((ClassAttribute) a).getOntClass());
-                }
-                return result;
-            }
-
-            @Override
-            protected Object doInBackground() throws Exception {
-                counterexamples++;
-                String uri = String.format("_:%d", counterexamples);
-                OWLOntologyManager m = model.getRootOntology().getOWLOntologyManager();
-                OWLDataFactory f = m.getOWLDataFactory();
-                OWLNamedIndividual ind = f.getOWLNamedIndividual(IRI.create(uri));
-                OWLClassExpression p = f.getOWLObjectIntersectionOf(toSet(guiExpert.getCurrentImplication().getPremises()));
-                OWLClassExpression c = f.getOWLObjectIntersectionOf(toSet(guiExpert.getCurrentImplication().getConclusions()));
-                m.addAxiom(model.getRootOntology(), f.getOWLClassAssertionAxiom(p, ind));
-                m.addAxiom(model.getRootOntology(), f.getOWLClassAssertionAxiom(c.getObjectComplementOf(), ind));
-                extendPartialContext(uri, getUsedAttributes());
-                model.flush();
-                context.updateContext();
-                return null;
-            }
-
-            @Override
-            protected void done() {
-                ((ContextDataModel) contextTable.getModel()).fireTableDataChanged();
-            }
-        }.execute();
     }
 
     /**
