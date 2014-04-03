@@ -194,6 +194,16 @@ public class MainWindow extends javax.swing.JFrame {
             }
         }
 
+        private void rememberExample(boolean accept) {
+            double p = accept ? 1 : 0;
+            if (Math.abs(clResult - p) < getIgnoreTreshold()) {
+                return;
+            }
+            //clResult is nan or is far enough from proper value
+            classifier.addExample(lastFeatures, accept);
+            classifier.updateModel();
+        }
+
         private void accept() {
             if (currentImplication.isRefutedBy(context)) {
                 return;
@@ -202,8 +212,7 @@ public class MainWindow extends javax.swing.JFrame {
             ((ConfusionMatrix) confusionMatrix.getModel()).add(shouldAccept(), true);
             registerImplication(currentImplication, clResult, Decision.ACCEPT);
             synchronized (lock) {
-                classifier.addExample(lastFeatures, true);
-                classifier.updateModel();
+                rememberExample(true);
                 dec = Decision.ACCEPT;
                 lock.notify();
             }
@@ -217,8 +226,7 @@ public class MainWindow extends javax.swing.JFrame {
             ((ConfusionMatrix) confusionMatrix.getModel()).add(shouldAccept(), false);
             registerImplication(currentImplication, clResult, Decision.REJECT);
             synchronized (lock) {
-                classifier.addExample(lastFeatures, false);
-                classifier.updateModel();
+                rememberExample(false);
                 dec = Decision.REJECT;
                 lock.notify();
             }
@@ -356,6 +364,10 @@ public class MainWindow extends javax.swing.JFrame {
         ((HistoryTableModel) history.getModel()).add(i, p, d);
     }
 
+    private double getIgnoreTreshold() {
+        return ((double) (ignoreTreshold.getValue() - ignoreTreshold.getMinimum())) / (ignoreTreshold.getMaximum() - ignoreTreshold.getMinimum());
+    }
+
     /**
      * Creates new form MainWindow
      */
@@ -426,6 +438,8 @@ public class MainWindow extends javax.swing.JFrame {
         useHermit = new javax.swing.JRadioButton();
         jPanel4 = new javax.swing.JPanel();
         classifierToUse = new javax.swing.JComboBox();
+        jLabel1 = new javax.swing.JLabel();
+        ignoreTreshold = new javax.swing.JSlider();
         jPanel5 = new javax.swing.JPanel();
         jScrollPane7 = new javax.swing.JScrollPane();
         availableCalculators = new CheckBoxList<FeatureCalculator>();
@@ -565,12 +579,16 @@ public class MainWindow extends javax.swing.JFrame {
                 .addComponent(useJFact)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(useHermit)
-                .addContainerGap(40, Short.MAX_VALUE))
+                .addContainerGap(43, Short.MAX_VALUE))
         );
 
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Classifier"));
 
         classifierToUse.setModel(new put.semantic.fcanew.ui.AvailableClassifiersModel());
+
+        jLabel1.setText("Ignore treshold:");
+
+        ignoreTreshold.setValue(10);
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
@@ -578,7 +596,12 @@ public class MainWindow extends javax.swing.JFrame {
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(classifierToUse, 0, 218, Short.MAX_VALUE)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(classifierToUse, 0, 218, Short.MAX_VALUE)
+                    .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addComponent(jLabel1)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(ignoreTreshold, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel4Layout.setVerticalGroup(
@@ -586,7 +609,11 @@ public class MainWindow extends javax.swing.JFrame {
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(classifierToUse, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(93, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jLabel1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(ignoreTreshold, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(38, Short.MAX_VALUE))
         );
 
         jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder("Feature calculators"));
@@ -730,7 +757,7 @@ public class MainWindow extends javax.swing.JFrame {
                                         .addGap(18, 18, 18)
                                         .addComponent(forcedToUsed)
                                         .addGap(0, 0, Short.MAX_VALUE))
-                                    .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 548, Short.MAX_VALUE))))
+                                    .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 545, Short.MAX_VALUE))))
                         .addContainerGap())
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addGap(30, 30, 30)
@@ -1033,7 +1060,7 @@ public class MainWindow extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jTabbedPane1)
+                .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 1041, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1448,7 +1475,9 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JButton forcedToUsed;
     private javax.swing.JButton generateAttributes;
     private javax.swing.JTable history;
+    private javax.swing.JSlider ignoreTreshold;
     private javax.swing.JLabel implicationText;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
