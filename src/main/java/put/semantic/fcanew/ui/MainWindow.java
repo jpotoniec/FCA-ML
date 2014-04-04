@@ -411,6 +411,7 @@ public class MainWindow extends javax.swing.JFrame {
                 return calc.getClass().getSimpleName() + ": " + StringUtils.join(calc.getNames(), ", ");
             }
         });
+        classifierToUse.setSelectedIndex(PreferencesProvider.getInstance().getClassifier());
         CSVExporter.addToAllTables(this);
     }
 
@@ -585,6 +586,11 @@ public class MainWindow extends javax.swing.JFrame {
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Classifier"));
 
         classifierToUse.setModel(new put.semantic.fcanew.ui.AvailableClassifiersModel());
+        classifierToUse.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                classifierToUseActionPerformed(evt);
+            }
+        });
 
         jLabel1.setText("Ignore treshold:");
 
@@ -1421,6 +1427,10 @@ public class MainWindow extends javax.swing.JFrame {
             }
         }
     }//GEN-LAST:event_saveInstancesActionPerformed
+
+    private void classifierToUseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_classifierToUseActionPerformed
+        PreferencesProvider.getInstance().setClassifier(classifierToUse.getSelectedIndex());
+    }//GEN-LAST:event_classifierToUseActionPerformed
 
     /**
      * @param args the command line arguments

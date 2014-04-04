@@ -83,4 +83,12 @@ public class PreferencesProvider {
     public File getMappingsFile() {
         return new File(getNode().get("mappings", ""));
     }
+
+    public int getClassifier() {
+        return getNode().getInt("classifier", 0);
+    }
+
+    public void setClassifier(int cl) {
+        getNode().putInt("classifier", cl);
+    }
 }
