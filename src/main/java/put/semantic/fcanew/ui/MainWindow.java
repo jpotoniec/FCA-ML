@@ -156,7 +156,7 @@ public class MainWindow extends javax.swing.JFrame {
         private Map<String, Double> lastFeatures;
         private Implication currentImplication;
         private final Classifier classifier;
-        private double clResult;
+        private double clResult = Double.NaN;
 
         public GuiExpert(Classifier cl) {
             this.classifier = cl;
@@ -261,7 +261,7 @@ public class MainWindow extends javax.swing.JFrame {
                 public void run() {
                     currentImplication = impl;
                     ((ContextDataModel) contextTable.getModel()).setCurrentImplication(currentImplication);
-                    justificationText.setText(String.format("<html><br>Justification: <br><pre>%s</pre></html>", classifier.getJustification()));
+                    justificationText.setText(String.format("<html>Probability of acceptance: %.3f<br>Justification: <br><pre>%s</pre></html>", clResult, classifier.getJustification()));
                     implicationText.setText(String.format("<html>%s</html>", impl.toString()));
                     setEnabled(true);
                     refreshFeatures();
@@ -298,7 +298,6 @@ public class MainWindow extends javax.swing.JFrame {
                         final Map<String, Double> features = get();
                         clResult = classifier.classify(features);
                         highlightButton(shouldAccept());
-                        features.put("classifier", clResult);
                         synchronized (lock) {
                             lastFeatures = features;
                         }
