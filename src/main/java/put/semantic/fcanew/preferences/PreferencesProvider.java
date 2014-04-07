@@ -91,4 +91,12 @@ public class PreferencesProvider {
     public void setClassifier(int cl) {
         getNode().putInt("classifier", cl);
     }
+
+    public int getCredibilityTreshold() {
+        return getNode().getInt("crediblityTreshold", 10);
+    }
+
+    public void setCredibilityTreshold(int ct) {
+        getNode().putInt("crediblityTreshold", ct);
+    }
 }

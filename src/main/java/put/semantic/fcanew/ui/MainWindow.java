@@ -157,9 +157,11 @@ public class MainWindow extends javax.swing.JFrame {
         private Implication currentImplication;
         private final Classifier classifier;
         private double clResult = Double.NaN;
+        private final int credibilityTreshold;
 
-        public GuiExpert(Classifier cl) {
+        public GuiExpert(Classifier cl, int credibilityTreshold) {
             this.classifier = cl;
+            this.credibilityTreshold = credibilityTreshold;
             this.calculators = availableCalculatorsModel.getChecked();
             List<String> features = new ArrayList<>();
             for (FeatureCalculator calc : calculators) {
@@ -261,7 +263,7 @@ public class MainWindow extends javax.swing.JFrame {
         private boolean isClassifierReady() {
             int[] dist = classifier.getClassDistribution();
             for (int i = 0; i < dist.length; ++i) {
-                if (dist[i] < 10) {
+                if (dist[i] < credibilityTreshold) {
                     return false;
                 }
             }
@@ -421,6 +423,7 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
         classifierToUse.setSelectedIndex(PreferencesProvider.getInstance().getClassifier());
+        credibilityTreshold.setValue(PreferencesProvider.getInstance().getCredibilityTreshold());
         CSVExporter.addToAllTables(this);
     }
 
@@ -450,6 +453,8 @@ public class MainWindow extends javax.swing.JFrame {
         classifierToUse = new javax.swing.JComboBox();
         jLabel1 = new javax.swing.JLabel();
         ignoreTreshold = new javax.swing.JSlider();
+        jLabel2 = new javax.swing.JLabel();
+        credibilityTreshold = new javax.swing.JSpinner();
         jPanel5 = new javax.swing.JPanel();
         jScrollPane7 = new javax.swing.JScrollPane();
         availableCalculators = new CheckBoxList<FeatureCalculator>();
@@ -589,7 +594,7 @@ public class MainWindow extends javax.swing.JFrame {
                 .addComponent(useJFact)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(useHermit)
-                .addContainerGap(43, Short.MAX_VALUE))
+                .addContainerGap(48, Short.MAX_VALUE))
         );
 
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Classifier"));
@@ -605,6 +610,17 @@ public class MainWindow extends javax.swing.JFrame {
 
         ignoreTreshold.setValue(10);
 
+        jLabel2.setLabelFor(credibilityTreshold);
+        jLabel2.setText("Credibility treshold:");
+
+        credibilityTreshold.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(10), Integer.valueOf(0), null, Integer.valueOf(1)));
+        credibilityTreshold.setToolTipText("Number of instances (separate for every class) which must be available in training set in order to consider classifier outcome as meaningful.");
+        credibilityTreshold.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                credibilityTresholdStateChanged(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
@@ -613,10 +629,14 @@ public class MainWindow extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(classifierToUse, 0, 218, Short.MAX_VALUE)
+                    .addComponent(ignoreTreshold, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(ignoreTreshold, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addComponent(jLabel2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(credibilityTreshold)))
                 .addContainerGap())
         );
         jPanel4Layout.setVerticalGroup(
@@ -628,7 +648,11 @@ public class MainWindow extends javax.swing.JFrame {
                 .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(ignoreTreshold, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(38, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel2)
+                    .addComponent(credibilityTreshold, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder("Feature calculators"));
@@ -772,7 +796,7 @@ public class MainWindow extends javax.swing.JFrame {
                                         .addGap(18, 18, 18)
                                         .addComponent(forcedToUsed)
                                         .addGap(0, 0, Short.MAX_VALUE))
-                                    .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 545, Short.MAX_VALUE))))
+                                    .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 540, Short.MAX_VALUE))))
                         .addContainerGap())
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addGap(30, 30, 30)
@@ -1075,7 +1099,7 @@ public class MainWindow extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 1041, Short.MAX_VALUE)
+                .addComponent(jTabbedPane1)
                 .addContainerGap())
         );
 
@@ -1235,7 +1259,7 @@ public class MainWindow extends javax.swing.JFrame {
                 col.setPreferredWidth(20);
             }
         }
-        guiExpert = new GuiExpert((Classifier) classifierToUse.getSelectedItem());
+        guiExpert = new GuiExpert((Classifier) classifierToUse.getSelectedItem(), (Integer) credibilityTreshold.getValue());
         final FCA fca = new FCA();
         fca.setContext(context);
         fca.setExpert(guiExpert);
@@ -1441,6 +1465,10 @@ public class MainWindow extends javax.swing.JFrame {
         PreferencesProvider.getInstance().setClassifier(classifierToUse.getSelectedIndex());
     }//GEN-LAST:event_classifierToUseActionPerformed
 
+    private void credibilityTresholdStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_credibilityTresholdStateChanged
+        PreferencesProvider.getInstance().setCredibilityTreshold((Integer) credibilityTreshold.getValue());
+    }//GEN-LAST:event_credibilityTresholdStateChanged
+
     /**
      * @param args the command line arguments
      */
@@ -1485,6 +1513,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JComboBox classifierToUse;
     private javax.swing.JTable confusionMatrix;
     private javax.swing.JTable contextTable;
+    private javax.swing.JSpinner credibilityTreshold;
     private javax.swing.JButton downloadSomething;
     private javax.swing.JSplitPane fcaTab;
     private javax.swing.JTable featuresTable;
@@ -1497,6 +1526,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JSlider ignoreTreshold;
     private javax.swing.JLabel implicationText;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
