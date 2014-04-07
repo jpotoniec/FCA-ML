@@ -12,6 +12,7 @@ package put.semantic.fcanew.ml;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import javax.swing.table.AbstractTableModel;
@@ -60,6 +61,7 @@ public class LinearRegression extends AbstractClassifier {
     private List<Double> decisions = new ArrayList<>();
     private OLSMultipleLinearRegression regression = new OLSMultipleLinearRegression();
     private InstancesTableModel tableModel = new InstancesTableModel();
+    private int[] classDistribution = new int[2];
 
     @Override
     public void setup(List<String> attributes) {
@@ -69,9 +71,10 @@ public class LinearRegression extends AbstractClassifier {
 
     @Override
     public void addExample(Map<String, Double> features, boolean accept) {
-        double decision = accept ? 1 : 0;
+        int decision = accept ? 1 : 0;
         examples.add(transform(features));
-        decisions.add(decision);
+        decisions.add((double) decision);
+        classDistribution[decision]++;
         tableModel.fireTableRowsInserted(examples.size() - 1, examples.size() - 1);
     }
 
@@ -129,6 +132,11 @@ public class LinearRegression extends AbstractClassifier {
     @Override
     public void loadExamples(File f) throws IOException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public int[] getClassDistribution() {
+        return Arrays.copyOf(classDistribution, classDistribution.length);
     }
 
 }

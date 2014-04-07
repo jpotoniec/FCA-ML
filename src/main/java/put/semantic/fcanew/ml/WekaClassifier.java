@@ -173,4 +173,9 @@ public class WekaClassifier extends put.semantic.fcanew.ml.AbstractClassifier {
         tableModel.fireTableDataChanged();
     }
 
+    @Override
+    public int[] getClassDistribution() {
+        return instances.attributeStats(instances.classIndex()).nominalCounts;
+    }
+
 }

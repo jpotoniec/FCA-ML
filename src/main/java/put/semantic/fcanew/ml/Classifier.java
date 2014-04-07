@@ -30,4 +30,6 @@ public interface Classifier {
     public void saveExamples(File f) throws IOException;
 
     public void loadExamples(File f) throws IOException;
+
+    public int[] getClassDistribution();
 }
