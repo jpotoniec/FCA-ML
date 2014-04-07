@@ -5,7 +5,9 @@
  */
 package put.semantic.fcanew;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 
@@ -89,5 +91,13 @@ public class SubsetOfAttributes extends ReadOnlySubsetOfAttributes {
 
     public void remove(Attribute a) {
         indexes.remove(base.indexOf(a));
+    }
+
+    public List<? extends SubsetOfAttributes> split() {
+        List<SubsetOfAttributes> result = new ArrayList<>();
+        for (Integer i : this.indexes) {
+            result.add(new SubsetOfAttributes(base, new Integer[]{i}));
+        }
+        return result;
     }
 }

@@ -102,7 +102,9 @@ public class FCA {
         while (!p.isFull()) {
             List<Implication> pending = new ArrayList<>();
             for (SubsetOfAttributes c : conclusions(p)) {
-                pending.add(new Implication(p, c));
+                for (SubsetOfAttributes e : c.split()) {
+                    pending.add(new Implication(p, e));
+                }
             }
             goToNext = true;
             for (Implication i : pending) {
