@@ -42,6 +42,7 @@ import javax.swing.event.ListDataListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
+import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import org.apache.commons.lang.StringUtils;
 import org.semanticweb.HermiT.Reasoner;
@@ -67,7 +68,6 @@ import put.semantic.fcanew.Attribute;
 import put.semantic.fcanew.Expert;
 import put.semantic.fcanew.FCA;
 import put.semantic.fcanew.Implication;
-import put.semantic.fcanew.POD;
 import put.semantic.fcanew.PartialContext;
 import put.semantic.fcanew.ProgressListener;
 import put.semantic.fcanew.SimpleSetOfAttributes;
@@ -246,6 +246,9 @@ public class MainWindow extends javax.swing.JFrame {
         }
 
         private Boolean shouldAccept() {
+            if (!isClassifierReady()) {
+                return null;
+            }
             if (clResult > 0.6) {
                 return true;
             } else if (clResult < 0.4) {
@@ -255,68 +258,74 @@ public class MainWindow extends javax.swing.JFrame {
             }
         }
 
+        private boolean isClassifierReady() {
+            int[] dist = classifier.getClassDistribution();
+            for (int i = 0; i < dist.length; ++i) {
+                if (dist[i] < 10) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private String classifierState() {
+            int[] dist = classifier.getClassDistribution();
+            String result = "";
+            for (int i = 0; i < dist.length; ++i) {
+                if (i > 0) {
+                    result += ", ";
+                }
+                result += String.format("%d", dist[i]);
+            }
+            return "(" + result + ")";
+        }
+
         private void ask(final Implication impl) {
+            assert !EventQueue.isDispatchThread();
+            final Map<String, Double> features = getFeatures(impl);
+            try {
+                clResult = classifier.classify(features);
+            } catch (Exception ex) {
+                clResult = Double.NaN;
+                ex.printStackTrace();
+            }
+            final TableModel model = getFeaturesTableModel(features);
             EventQueue.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    currentImplication = impl;
+                    highlightButton(shouldAccept());
+                    synchronized (lock) {
+                        lastFeatures = features;
+                        currentImplication = impl;
+                    }
                     ((ContextDataModel) contextTable.getModel()).setCurrentImplication(currentImplication);
-                    justificationText.setText(String.format("<html>Probability of acceptance: %.3f<br>Justification: <br><pre>%s</pre></html>", clResult, classifier.getJustification()));
+                    String justification;
+                    if (isClassifierReady()) {
+                        justification = String.format("<html>Probability of acceptance: %.3f<br>Justification: <br><pre>%s</pre></html>", clResult, classifier.getJustification());
+                    } else {
+                        justification = String.format("<html>Classifier is learning (%.3f)<br>%s</html>", clResult, classifierState());
+                    }
+                    justificationText.setText(justification);
                     implicationText.setText(String.format("<html>%s</html>", impl.toString()));
                     setEnabled(true);
-                    refreshFeatures();
+                    featuresTable.setModel(model);
+                    if (features.get("follows from KB") == 1) {
+                        acceptButton.doClick();
+                    }
                 }
             });
         }
 
-        public Implication getCurrentImplication() {
-            return currentImplication;
+        private TableModel getFeaturesTableModel(Map<String, Double> features) {
+            DefaultTableModel model = new DefaultTableModel(new String[]{"feature", "value"}, 0);
+            for (Map.Entry<String, Double> f : features.entrySet()) {
+                model.addRow(new Object[]{f.getKey(), f.getValue()});
+            }
+            return model;
         }
 
-        private void refreshFeatures() {
-            if (!EventQueue.isDispatchThread()) {
-                EventQueue.invokeLater(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        refreshFeatures();
-                    }
-                });
-                return;
-            }
-            assert EventQueue.isDispatchThread();
-            new SwingWorker<Map<String, Double>, Object>() {
-
-                @Override
-                protected Map<String, Double> doInBackground() throws Exception {
-                    return getFeatures(currentImplication);
-                }
-
-                @Override
-                protected void done() {
-                    try {
-                        final Map<String, Double> features = get();
-                        clResult = classifier.classify(features);
-                        highlightButton(shouldAccept());
-                        synchronized (lock) {
-                            lastFeatures = features;
-                        }
-                        DefaultTableModel model = new DefaultTableModel(new String[]{"feature", "value"}, 0);
-                        for (Map.Entry<String, Double> f : features.entrySet()) {
-                            model.addRow(new Object[]{f.getKey(), f.getValue()});
-                        }
-                        featuresTable.setModel(model);
-                        if (features.get("follows from KB") == 1) {
-                            acceptButton.doClick();
-                        }
-                    } catch (InterruptedException | ExecutionException ex) {
-                        //impossible
-                        Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-
-            }.execute();
-
+        public Implication getCurrentImplication() {
+            return currentImplication;
         }
     }
 
