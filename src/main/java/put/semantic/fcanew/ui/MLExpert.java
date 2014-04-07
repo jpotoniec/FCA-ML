@@ -13,8 +13,16 @@ import java.util.EventListener;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.SwingWorker;
+import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.OWLDataFactory;
+import org.semanticweb.owlapi.model.OWLNamedIndividual;
+import org.semanticweb.owlapi.model.OWLOntologyManager;
+import org.semanticweb.owlapi.reasoner.OWLReasoner;
+import put.semantic.fcanew.Attribute;
 import put.semantic.fcanew.Expert;
 import put.semantic.fcanew.Implication;
 import put.semantic.fcanew.PartialContext;
@@ -157,16 +165,62 @@ public class MLExpert implements Expert {
         }
     }
 
+    private int counter = 0;
+
+    protected String generateURI() {
+        return String.format("http://www.nonexisting.org/%d", ++counter);
+    }
+
+    protected boolean addCounterexample() {
+        if (currentImplication.getConclusions().size() != 1) {
+            return false;
+        }
+        OWLReasoner model = context.getModel();
+        OWLOntologyManager m = model.getRootOntology().getOWLOntologyManager();
+        OWLDataFactory f = m.getOWLDataFactory();
+        OWLNamedIndividual ind = f.getOWLNamedIndividual(IRI.create(generateURI()));
+        if (!currentImplication.getPremises().isEmpty()) {
+            for (Attribute a : currentImplication.getPremises()) {
+                m.addAxiom(model.getRootOntology(), f.getOWLClassAssertionAxiom(((ClassAttribute) a).getOntClass(), ind));
+            }
+        }
+        m.addAxiom(model.getRootOntology(), f.getOWLClassAssertionAxiom(((ClassAttribute) currentImplication.getConclusions().iterator().next()).getComplement(), ind));
+        model.flush();
+        context.updateContext();
+        return true;
+    }
+
     public void reject() {
-        if (!currentImplication.isRefutedBy(context)) {
-            return;
-        }
-        fireImplicationRejected();
-        synchronized (lock) {
-            rememberExample(false);
-            dec = Expert.Decision.REJECT;
-            lock.notify();
-        }
+        new SwingWorker<Boolean, Object>() {
+
+            @Override
+            protected Boolean doInBackground() throws Exception {
+                if (!currentImplication.isRefutedBy(context)) {
+                    return addCounterexample();
+                } else {
+                    return true;
+                }
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    if (!get()) {
+                        return;
+                    }
+                    fireImplicationRejected();
+                    synchronized (lock) {
+                        rememberExample(false);
+                        dec = Expert.Decision.REJECT;
+                        lock.notify();
+                    }
+                } catch (InterruptedException | ExecutionException ex) {
+                    //should never happen
+                    Logger.getLogger(MLExpert.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+
+        }.execute();
     }
 
     private Map<String, Double> getFeatures(Implication impl) {
