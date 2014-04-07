@@ -14,6 +14,8 @@ import darrylbu.renderer.VerticalTableHeaderCellRenderer;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,6 +60,7 @@ import org.semanticweb.owlapi.model.OWLObjectProperty;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
+import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 import org.semanticweb.owlapi.reasoner.BufferingMode;
 import org.semanticweb.owlapi.reasoner.Node;
 import org.semanticweb.owlapi.reasoner.NodeSet;
@@ -305,6 +308,7 @@ public class MainWindow extends javax.swing.JFrame {
         downloadSomething = new javax.swing.JButton();
         jScrollPane4 = new javax.swing.JScrollPane();
         justificationText = new javax.swing.JLabel();
+        saveResult = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         featuresTable = new javax.swing.JTable();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -736,6 +740,13 @@ public class MainWindow extends javax.swing.JFrame {
         justificationText.setText("jLabel1");
         jScrollPane4.setViewportView(justificationText);
 
+        saveResult.setText("Save result");
+        saveResult.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                saveResultActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -763,7 +774,9 @@ public class MainWindow extends javax.swing.JFrame {
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                         .addComponent(jScrollPane4)
                         .addGap(18, 18, 18)
-                        .addComponent(downloadSomething)))
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(downloadSomething)
+                            .addComponent(saveResult))))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -782,7 +795,9 @@ public class MainWindow extends javax.swing.JFrame {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(downloadSomething)
-                        .addGap(0, 91, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(saveResult)
+                        .addGap(0, 54, Short.MAX_VALUE))
                     .addComponent(jScrollPane4))
                 .addGap(18, 18, 18)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -1327,6 +1342,27 @@ public class MainWindow extends javax.swing.JFrame {
         PreferencesProvider.getInstance().setCredibilityTreshold((Integer) credibilityTreshold.getValue());
     }//GEN-LAST:event_credibilityTresholdStateChanged
 
+    private void saveResultActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveResultActionPerformed
+        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            FileOutputStream s = null;
+            try {
+                s = new FileOutputStream(fileChooser.getSelectedFile());
+                model.getRootOntology().getOWLOntologyManager().saveOntology(model.getRootOntology(), s);
+            } catch (FileNotFoundException | OWLOntologyStorageException ex) {
+                JOptionPane.showMessageDialog(this, ex.toString());
+                Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+            } finally {
+                try {
+                    if (s != null) {
+                        s.close();
+                    }
+                } catch (IOException ex) {
+                    Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+    }//GEN-LAST:event_saveResultActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -1417,6 +1453,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JButton removeFile;
     private javax.swing.JButton resetFilter;
     private javax.swing.JButton saveInstances;
+    private javax.swing.JButton saveResult;
     private javax.swing.JPanel setupTab;
     private javax.swing.JButton start;
     private javax.swing.JList unusedAttributes;
