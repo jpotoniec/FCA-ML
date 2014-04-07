@@ -32,16 +32,10 @@ public class PartialContext {
     private SetOfAttributes attributes;
     private OWLReasoner model;
     private List<ContextChangedListener> contextChangedListeners = new ArrayList<>();
-    private boolean contextChanged = false;
-    private boolean postponeChangesPropagation = false;
     private POD.PODChangedListener changeListener = new POD.PODChangedListener() {
         @Override
         public void podChanged(POD pod) {
-            if (postponeChangesPropagation) {
-                contextChanged = true;
-            } else {
-                fireContextChanged(pod);
-            }
+            fireContextChanged(pod);
         }
     };
     private List<ProgressListener> progessListeners = new ArrayList<ProgressListener>();
@@ -98,7 +92,6 @@ public class PartialContext {
     }
 
     protected void fireContextChanged(POD pod) {
-        contextChanged = false;
         for (ContextChangedListener listener : contextChangedListeners) {
             listener.contextChanged(this, pod);
         }
@@ -121,7 +114,6 @@ public class PartialContext {
     }
 
     public void updateContext() {
-        postponeChangesPropagation = true;
         model.precomputeInferences(InferenceType.CLASS_ASSERTIONS, InferenceType.CLASS_HIERARCHY, InferenceType.OBJECT_PROPERTY_ASSERTIONS, InferenceType.OBJECT_PROPERTY_HIERARCHY);
         Map<OWLNamedIndividual, SubsetOfAttributes> p = new HashMap<>();
         Map<OWLNamedIndividual, SubsetOfAttributes> n = new HashMap<>();
@@ -155,10 +147,7 @@ public class PartialContext {
             POD pod = new POD(i, getAttributes(), model, p.get(i), n.get(i));
             addPOD(pod);
         }
-        postponeChangesPropagation = false;
-        if (contextChanged) {
-            fireContextChanged(null);
-        }
+        fireContextChanged(null);
     }
 
     public void addProgressListener(ProgressListener l) {
