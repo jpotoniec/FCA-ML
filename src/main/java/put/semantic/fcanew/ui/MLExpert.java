@@ -35,9 +35,9 @@ public class MLExpert implements Expert {
 
     public static interface MLExpertEventListener extends EventListener {
 
-        public void implicationAccepted(ImplicationDescription i);
+        public void implicationAccepted(ImplicationDescription i, boolean autoDecision);
 
-        public void implicationRejected(ImplicationDescription i);
+        public void implicationRejected(ImplicationDescription i, boolean autoDecision);
 
         public void ask(ImplicationDescription i, String justification);
     }
@@ -53,6 +53,8 @@ public class MLExpert implements Expert {
     private final double ignoreTreshold;
     private final PartialContext context;
     private final List<MLExpertEventListener> listeners = new ArrayList<>();
+    private final double autoAcceptTreshold;
+    private boolean autoDecision;
 
     public void addEventListener(MLExpertEventListener l) {
         if (l != null) {
@@ -72,7 +74,7 @@ public class MLExpert implements Expert {
             @Override
             public void run() {
                 for (MLExpertEventListener l : listeners) {
-                    l.implicationAccepted(i);
+                    l.implicationAccepted(i, autoDecision);
                 }
             }
         });
@@ -86,7 +88,7 @@ public class MLExpert implements Expert {
             @Override
             public void run() {
                 for (MLExpertEventListener l : listeners) {
-                    l.implicationRejected(i);
+                    l.implicationRejected(i, autoDecision);
                 }
             }
         });
@@ -106,12 +108,13 @@ public class MLExpert implements Expert {
         });
     }
 
-    public MLExpert(Classifier cl, int credibilityTreshold, List<? extends FeatureCalculator> calculators, double ignoreTreshold, PartialContext context) {
+    public MLExpert(Classifier cl, int credibilityTreshold, List<? extends FeatureCalculator> calculators, double ignoreTreshold, PartialContext context, double autoAcceptTreshold) {
         this.classifier = cl;
         this.credibilityTreshold = credibilityTreshold;
         this.calculators = calculators;
         this.ignoreTreshold = ignoreTreshold;
         this.context = context;
+        this.autoAcceptTreshold = autoAcceptTreshold;
         List<String> features = new ArrayList<>();
         for (FeatureCalculator calc : calculators) {
             features.addAll(calc.getNames());
@@ -143,7 +146,7 @@ public class MLExpert implements Expert {
 
     private void rememberExample(boolean accept) {
         double p = accept ? 1 : 0;
-        if (Math.abs(clResult - p) < ignoreTreshold) {
+        if (Math.abs(clResult - p) < ignoreTreshold || autoDecision) {
             return;
         }
         //clResult is nan or is far enough from proper value
@@ -279,6 +282,7 @@ public class MLExpert implements Expert {
 
     private void ask(final Implication impl) {
         assert !EventQueue.isDispatchThread();
+        autoDecision = false;
         Map<String, Double> features = getFeatures(impl);
         String justification;
         synchronized (classifier) {
@@ -301,6 +305,16 @@ public class MLExpert implements Expert {
         fireAsk(justification);
         if (features.get("follows from KB") == 1) {
             accept();
+        }
+        if (isClassifierReady()) {
+            if (clResult < autoAcceptTreshold) {
+                autoDecision = true;
+                reject();
+            }
+            if (clResult > 1 - autoAcceptTreshold) {
+                autoDecision = true;
+                accept();
+            }
         }
     }
 
