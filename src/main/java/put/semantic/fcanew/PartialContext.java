@@ -182,4 +182,8 @@ public class PartialContext {
             l.update(status);
         }
     }
+
+    public OWLReasoner getModel() {
+        return model;
+    }
 }

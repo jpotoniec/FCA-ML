@@ -25,7 +25,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -66,6 +65,7 @@ import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary;
 import put.semantic.fcanew.Attribute;
 import put.semantic.fcanew.Expert;
+import put.semantic.fcanew.Expert.Suggestion;
 import put.semantic.fcanew.FCA;
 import put.semantic.fcanew.Implication;
 import put.semantic.fcanew.PartialContext;
@@ -83,16 +83,11 @@ import put.semantic.fcanew.ml.features.impl.FollowingCalculators;
 import put.semantic.fcanew.ml.features.impl.ImplicationShapeCalculator;
 import put.semantic.fcanew.ml.features.impl.RuleCalculator;
 import put.semantic.fcanew.ml.features.impl.SatCalculator;
-import put.semantic.fcanew.ml.features.values.FeatureValue;
-import put.semantic.fcanew.ml.features.values.NumericFeatureValue;
 import put.semantic.fcanew.preferences.PreferencesProvider;
+import put.semantic.fcanew.ui.MLExpert.MLExpertEventListener;
 import uk.ac.manchester.cs.jfact.JFactFactory;
 import uk.ac.manchester.cs.owlapi.dlsyntax.DLSyntaxObjectRenderer;
 
-/**
- *
- * @author smaug
- */
 public class MainWindow extends javax.swing.JFrame {
 
     private PartialContext context;
@@ -136,199 +131,20 @@ public class MainWindow extends javax.swing.JFrame {
     }
     private Font normalFont, boldFont;
 
-    private void highlightButton(Boolean shouldAccept) {
+    private void highlightButton(Suggestion s) {
+        assert s != null;
         acceptButton.setFont(normalFont);
         rejectButton.setFont(normalFont);
-        if (shouldAccept != null) {
-            if (shouldAccept) {
-                acceptButton.setFont(boldFont);
-            } else {
-                rejectButton.setFont(boldFont);
-            }
+        if (s == Suggestion.ACCEPT) {
+            acceptButton.setFont(boldFont);
+        } else if (s == Suggestion.REJECT) {
+            rejectButton.setFont(boldFont);
         }
     }
 
-    private class GuiExpert implements Expert {
-
-        private final List<? extends FeatureCalculator> calculators;
-        private final Object lock = new Object();
-        private Decision dec;
-        private Map<String, Double> lastFeatures;
-        private Implication currentImplication;
-        private final Classifier classifier;
-        private double clResult = Double.NaN;
-        private final int credibilityTreshold;
-
-        public GuiExpert(Classifier cl, int credibilityTreshold) {
-            this.classifier = cl;
-            this.credibilityTreshold = credibilityTreshold;
-            this.calculators = availableCalculatorsModel.getChecked();
-            List<String> features = new ArrayList<>();
-            for (FeatureCalculator calc : calculators) {
-                if (calc instanceof EndpointCalculator) {
-                    ((EndpointCalculator) calc).setMappings(mappingsPanel1.getMappings());
-                }
-                features.addAll(calc.getNames());
-            }
-            classifier.setup(features.toArray(new String[0]));
-            learningExamplesTable.setModel(classifier.getExamplesTableModel());
-        }
-
-        private void setEnabled(boolean enabled) {
-            acceptButton.setEnabled(enabled);
-            rejectButton.setEnabled(enabled);
-        }
-
-        @Override
-        public Decision verify(Implication impl) {
-            this.currentImplication = impl;
-            ask(impl);
-            while (true) {
-                try {
-                    synchronized (lock) {
-                        lock.wait();
-                        System.out.println("Decision: " + dec);
-                        return dec;
-                    }
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        }
-
-        private void rememberExample(boolean accept) {
-            double p = accept ? 1 : 0;
-            if (Math.abs(clResult - p) < getIgnoreTreshold()) {
-                return;
-            }
-            //clResult is nan or is far enough from proper value
-            classifier.addExample(lastFeatures, accept);
-            classifier.updateModel();
-        }
-
-        private void accept() {
-            if (currentImplication.isRefutedBy(context)) {
-                return;
-            }
-            setEnabled(false);
-            ((ConfusionMatrix) confusionMatrix.getModel()).add(shouldAccept(), true);
-            registerImplication(currentImplication, clResult, Decision.ACCEPT);
-            synchronized (lock) {
-                rememberExample(true);
-                dec = Decision.ACCEPT;
-                lock.notify();
-            }
-        }
-
-        private void reject() {
-            if (!currentImplication.isRefutedBy(context)) {
-                return;
-            }
-            setEnabled(false);
-            ((ConfusionMatrix) confusionMatrix.getModel()).add(shouldAccept(), false);
-            registerImplication(currentImplication, clResult, Decision.REJECT);
-            synchronized (lock) {
-                rememberExample(false);
-                dec = Decision.REJECT;
-                lock.notify();
-            }
-        }
-
-        private Map<String, Double> getFeatures(Implication impl) {
-            Map<String, Double> result = new TreeMap<>();
-            for (FeatureCalculator calc : calculators) {
-                System.err.println(calc.getClass());
-                List<String> names = calc.getNames();
-                List<? extends FeatureValue> values = calc.compute(impl, model, context);
-                for (int i = 0; i < names.size(); ++i) {
-                    result.put(names.get(i), ((NumericFeatureValue) values.get(i)).getValue());
-                }
-            }
-            return result;
-        }
-
-        private Boolean shouldAccept() {
-            if (!isClassifierReady()) {
-                return null;
-            }
-            if (clResult > 0.6) {
-                return true;
-            } else if (clResult < 0.4) {
-                return false;
-            } else {
-                return null;
-            }
-        }
-
-        private boolean isClassifierReady() {
-            int[] dist = classifier.getClassDistribution();
-            for (int i = 0; i < dist.length; ++i) {
-                if (dist[i] < credibilityTreshold) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        private String classifierState() {
-            int[] dist = classifier.getClassDistribution();
-            String result = "";
-            for (int i = 0; i < dist.length; ++i) {
-                if (i > 0) {
-                    result += ", ";
-                }
-                result += String.format("%d", dist[i]);
-            }
-            return "(" + result + ")";
-        }
-
-        private void ask(final Implication impl) {
-            assert !EventQueue.isDispatchThread();
-            final Map<String, Double> features = getFeatures(impl);
-            try {
-                clResult = classifier.classify(features);
-            } catch (Exception ex) {
-                clResult = Double.NaN;
-                ex.printStackTrace();
-            }
-            final TableModel model = getFeaturesTableModel(features);
-            EventQueue.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    highlightButton(shouldAccept());
-                    synchronized (lock) {
-                        lastFeatures = features;
-                        currentImplication = impl;
-                    }
-                    ((ContextDataModel) contextTable.getModel()).setCurrentImplication(currentImplication);
-                    String justification;
-                    if (isClassifierReady()) {
-                        justification = String.format("<html>Probability of acceptance: %.3f<br>Justification: <br><pre>%s</pre></html>", clResult, classifier.getJustification());
-                    } else {
-                        justification = String.format("<html>Classifier is learning (%.3f)<br>%s</html>", clResult, classifierState());
-                    }
-                    justificationText.setText(justification);
-                    implicationText.setText(String.format("<html>%s</html>", impl.toString()));
-                    setEnabled(true);
-                    featuresTable.setModel(model);
-                    if (features.get("follows from KB") == 1) {
-                        acceptButton.doClick();
-                    }
-                }
-            });
-        }
-
-        private TableModel getFeaturesTableModel(Map<String, Double> features) {
-            DefaultTableModel model = new DefaultTableModel(new String[]{"feature", "value"}, 0);
-            for (Map.Entry<String, Double> f : features.entrySet()) {
-                model.addRow(new Object[]{f.getKey(), f.getValue()});
-            }
-            return model;
-        }
-
-        public Implication getCurrentImplication() {
-            return currentImplication;
-        }
+    private void setButtonsEnabled(boolean enabled) {
+        acceptButton.setEnabled(enabled);
+        rejectButton.setEnabled(enabled);
     }
 
     private ProgressListener progressListener = new ProgressListener() {
@@ -364,7 +180,7 @@ public class MainWindow extends javax.swing.JFrame {
         }
     };
 
-    private GuiExpert guiExpert;
+    private MLExpert mlExpert;
     private OWLReasoner model;
     private MultiList<Attribute> attributes;
     private final CheckBoxListModel<FeatureCalculator> availableCalculatorsModel;
@@ -1107,11 +923,11 @@ public class MainWindow extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void acceptButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_acceptButtonActionPerformed
-        guiExpert.accept();
+        mlExpert.accept();
     }//GEN-LAST:event_acceptButtonActionPerformed
 
     private void rejectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rejectButtonActionPerformed
-        guiExpert.reject();
+        mlExpert.reject();
     }//GEN-LAST:event_rejectButtonActionPerformed
 
     private void addNew(final String uri) {
@@ -1125,8 +941,8 @@ public class MainWindow extends javax.swing.JFrame {
                 OWLOntologyManager m = model.getRootOntology().getOWLOntologyManager();
                 OWLDataFactory f = m.getOWLDataFactory();
                 OWLNamedIndividual ind = f.getOWLNamedIndividual(IRI.create(uri));
-                if (!guiExpert.getCurrentImplication().getPremises().isEmpty()) {
-                    for (Attribute a : guiExpert.getCurrentImplication().getPremises()) {
+                if (!mlExpert.getCurrentImplication().getPremises().isEmpty()) {
+                    for (Attribute a : mlExpert.getCurrentImplication().getPremises()) {
                         m.addAxiom(model.getRootOntology(), f.getOWLClassAssertionAxiom(((ClassAttribute) a).getOntClass(), ind));
                     }
                 } else {
@@ -1259,10 +1075,52 @@ public class MainWindow extends javax.swing.JFrame {
                 col.setPreferredWidth(20);
             }
         }
-        guiExpert = new GuiExpert((Classifier) classifierToUse.getSelectedItem(), (Integer) credibilityTreshold.getValue());
+        List<? extends FeatureCalculator> calculators = availableCalculatorsModel.getChecked();
+        for (FeatureCalculator calc : calculators) {
+            if (calc instanceof EndpointCalculator) {
+                ((EndpointCalculator) calc).setMappings(mappingsPanel1.getMappings());
+            }
+        }
+        Classifier classifier = (Classifier) classifierToUse.getSelectedItem();
+        mlExpert = new MLExpert(classifier, (Integer) credibilityTreshold.getValue(), calculators, getIgnoreTreshold(), context);
+        mlExpert.addEventListener(new MLExpertEventListener() {
+
+            @Override
+            public void implicationAccepted(ImplicationDescription i) {
+                setButtonsEnabled(false);
+                ((ConfusionMatrix) confusionMatrix.getModel()).add(i.getSuggestion(), Expert.Decision.ACCEPT);
+                registerImplication(i.getImplication(), i.getClassificationOutcome(), Expert.Decision.ACCEPT);
+            }
+
+            @Override
+            public void implicationRejected(ImplicationDescription i) {
+                setButtonsEnabled(false);
+                ((ConfusionMatrix) confusionMatrix.getModel()).add(i.getSuggestion(), Expert.Decision.REJECT);
+                registerImplication(i.getImplication(), i.getClassificationOutcome(), Expert.Decision.REJECT);
+            }
+
+            private TableModel getFeaturesTableModel(Map<String, Double> features) {
+                DefaultTableModel model = new DefaultTableModel(new String[]{"feature", "value"}, 0);
+                for (Map.Entry<String, Double> f : features.entrySet()) {
+                    model.addRow(new Object[]{f.getKey(), f.getValue()});
+                }
+                return model;
+            }
+
+            @Override
+            public void ask(ImplicationDescription i, String justification) {
+                highlightButton(i.getSuggestion());
+                ((ContextDataModel) contextTable.getModel()).setCurrentImplication(i.getImplication());
+                justificationText.setText(justification);
+                implicationText.setText(String.format("<html>%s</html>", i.getImplication().toString()));
+                setButtonsEnabled(true);
+                featuresTable.setModel(getFeaturesTableModel(i.getFeatures()));
+            }
+        });
+        learningExamplesTable.setModel(classifier.getExamplesTableModel());
         final FCA fca = new FCA();
         fca.setContext(context);
-        fca.setExpert(guiExpert);
+        fca.setExpert(mlExpert);
         new SwingWorker() {
             @Override
             protected Object doInBackground() throws Exception {
@@ -1403,7 +1261,7 @@ public class MainWindow extends javax.swing.JFrame {
     }
 
     private void downloadSomethingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_downloadSomethingActionPerformed
-        final Implication impl = guiExpert.getCurrentImplication();
+        final Implication impl = mlExpert.getCurrentImplication();
         new SwingWorker<List<String>, Object>() {
 
             @Override
@@ -1442,7 +1300,7 @@ public class MainWindow extends javax.swing.JFrame {
     private void loadInstancesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadInstancesActionPerformed
         if (instancesFileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
-                guiExpert.classifier.loadExamples(instancesFileChooser.getSelectedFile());
+                mlExpert.loadExamplesFromFile(instancesFileChooser.getSelectedFile());
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(this, ex.toString());
                 ex.printStackTrace();
@@ -1453,7 +1311,7 @@ public class MainWindow extends javax.swing.JFrame {
     private void saveInstancesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveInstancesActionPerformed
         if (instancesFileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
-                guiExpert.classifier.saveExamples(instancesFileChooser.getSelectedFile());
+                mlExpert.saveExamplesToFile(instancesFileChooser.getSelectedFile());
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(this, ex.toString());
                 ex.printStackTrace();

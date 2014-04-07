@@ -6,6 +6,8 @@
 package put.semantic.fcanew.ml;
 
 import javax.swing.table.AbstractTableModel;
+import put.semantic.fcanew.Expert.Decision;
+import put.semantic.fcanew.Expert.Suggestion;
 
 /**
  *
@@ -17,6 +19,35 @@ public class ConfusionMatrix extends AbstractTableModel {
     private static final String ROWS[] = {"Accepted", "Rejected", "Sum"};
 
     private int[][] data = new int[3][2];
+
+    public void add(Suggestion s, Decision d) {
+        Boolean a;
+        boolean b;
+        switch (s) {
+            case UNKNOWN:
+                a = null;
+                break;
+            case ACCEPT:
+                a = true;
+                break;
+            case REJECT:
+                a = false;
+                break;
+            default:
+                throw new IllegalArgumentException();
+        }
+        switch (d) {
+            case ACCEPT:
+                b = true;
+                break;
+            case REJECT:
+                b = false;
+                break;
+            default:
+                throw new IllegalArgumentException();
+        }
+        add(a, b);
+    }
 
     public void add(Boolean accept, boolean accepted) {
         int col;

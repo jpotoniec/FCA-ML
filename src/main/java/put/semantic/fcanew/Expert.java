@@ -11,6 +11,11 @@ public interface Expert {
         SKIP, ACCEPT, REJECT
     };
 
+    public enum Suggestion {
+
+        UNKNOWN, REJECT, ACCEPT
+    };
+
     public Decision verify(Implication impl);
 
     //it's expert's responsibility to update context accordingly
