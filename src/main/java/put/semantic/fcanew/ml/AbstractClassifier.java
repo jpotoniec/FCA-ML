@@ -17,6 +17,7 @@ public abstract class AbstractClassifier implements Classifier {
 
     protected List<String> attributes = null;
     protected String justification = "";
+    private double rejectedWeight;
 
     @Override
     public void setup(List<String> attributes) {
@@ -46,6 +47,16 @@ public abstract class AbstractClassifier implements Classifier {
     @Override
     public String getJustification() {
         return justification;
+    }
+
+    @Override
+    public double getRejectedWeight() {
+        return rejectedWeight;
+    }
+
+    @Override
+    public void setRejectedWeight(double w) {
+        this.rejectedWeight = w;
     }
 
 }

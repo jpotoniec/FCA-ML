@@ -38,4 +38,8 @@ public interface Classifier {
     public void setConfiguration(String cfg) throws Exception;
 
     public String getConfigurationHelp();
+
+    public void setRejectedWeight(double w);
+
+    public double getRejectedWeight();
 }

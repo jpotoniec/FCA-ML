@@ -100,6 +100,9 @@ public class WekaClassifier extends put.semantic.fcanew.ml.AbstractClassifier {
     public void addExample(Map<String, Double> features, boolean accept) {
         Instance i = makeInstance(features);
         i.setClassValue(classes.elementAt(accept ? 1 : 0).toString());
+        if (!accept) {
+            i.setWeight(getRejectedWeight());
+        }
         instances.add(i);
         tableModel.fireTableRowsInserted(instances.numInstances() - 1, instances.numInstances() - 1);
     }
@@ -173,6 +176,9 @@ public class WekaClassifier extends put.semantic.fcanew.ml.AbstractClassifier {
                 i.setDataset(instances);
             }
             if (instances.checkInstance(i)) {
+                if (i.classValue() == 0) {
+                    i.setWeight(getRejectedWeight());
+                }
                 instances.add(i);
             } else {
                 System.err.println("Ignoring incompatible instance");

@@ -107,4 +107,12 @@ public class PreferencesProvider {
     public void setClassifierConfiguration(String name, String configuration) {
         getNode().put(name, configuration);
     }
+
+    public double getRejectedWeight() {
+        return getNode().getDouble("rejectedWeight", 10);
+    }
+
+    public void setRejectedWeight(double w) {
+        getNode().putDouble("rejectedWeight", w);
+    }
 }
