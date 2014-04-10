@@ -8,17 +8,21 @@ package put.semantic.fcanew.ml;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableModel;
+import put.semantic.fcanew.preferences.PreferencesProvider;
 import weka.classifiers.Classifier;
 import weka.core.Attribute;
 import weka.core.FastVector;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.Option;
+import weka.core.Utils;
 import weka.core.converters.ArffLoader;
 import weka.core.converters.ArffSaver;
 
@@ -62,6 +66,11 @@ public class WekaClassifier extends put.semantic.fcanew.ml.AbstractClassifier {
 
     public WekaClassifier(Classifier classifier) {
         this.classifier = classifier;
+        try {
+            setConfiguration(PreferencesProvider.getInstance().getClassifierConfiguration(classifier.getClass().getName()));
+        } catch (Exception ex) {
+            //no stored configuration, using default
+        }
     }
 
     @Override
@@ -176,6 +185,30 @@ public class WekaClassifier extends put.semantic.fcanew.ml.AbstractClassifier {
     @Override
     public int[] getClassDistribution() {
         return instances.attributeStats(instances.classIndex()).nominalCounts;
+    }
+
+    @Override
+    public String getConfiguration() {
+        return Utils.joinOptions(classifier.getOptions());
+    }
+
+    @Override
+    public void setConfiguration(String cfg) throws Exception {
+        classifier.setOptions(Utils.splitOptions(cfg));
+        PreferencesProvider.getInstance().setClassifierConfiguration(classifier.getClass().getName(), getConfiguration());
+    }
+
+    @Override
+    public String getConfigurationHelp() {
+        String result = "";
+        result += "<html><ul>";
+        Enumeration e = classifier.listOptions();
+        while (e.hasMoreElements()) {
+            Option o = (Option) e.nextElement();
+            result += String.format("<li>%s (%d arguments)<br><pre>%s</pre></li>", o.synopsis(), o.numArguments(), o.description().replace("\n", "<br>"));
+        }
+        result += "</ul></html>";
+        return result;
     }
 
 }

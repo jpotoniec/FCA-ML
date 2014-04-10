@@ -32,4 +32,10 @@ public interface Classifier {
     public void loadExamples(File f) throws IOException;
 
     public int[] getClassDistribution();
+
+    public String getConfiguration();
+
+    public void setConfiguration(String cfg) throws Exception;
+
+    public String getConfigurationHelp();
 }

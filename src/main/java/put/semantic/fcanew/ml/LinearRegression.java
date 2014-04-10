@@ -139,4 +139,19 @@ public class LinearRegression extends AbstractClassifier {
         return Arrays.copyOf(classDistribution, classDistribution.length);
     }
 
+    @Override
+    public String getConfiguration() {
+        return "";
+    }
+
+    @Override
+    public void setConfiguration(String cfg) throws Exception {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public String getConfigurationHelp() {
+        return "This classifier does not offer configuration";
+    }
+
 }
