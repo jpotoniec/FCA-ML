@@ -30,7 +30,7 @@ public class PartialContext {
     }
     private List<POD> pods;
     private SetOfAttributes attributes;
-    private OWLReasoner model;
+    private KB kb;
     private List<ContextChangedListener> contextChangedListeners = new ArrayList<>();
     private POD.PODChangedListener changeListener = new POD.PODChangedListener() {
         @Override
@@ -40,10 +40,10 @@ public class PartialContext {
     };
     private List<ProgressListener> progessListeners = new ArrayList<ProgressListener>();
 
-    public PartialContext(SetOfAttributes attributes, OWLReasoner model) {
+    public PartialContext(SetOfAttributes attributes, KB kb) {
         this.pods = new ArrayList<>();
         this.attributes = attributes;
-        this.model = model;
+        this.kb = kb;
         addProgressListener(new ProgressListener() {
 
             int max = 0;
@@ -103,9 +103,9 @@ public class PartialContext {
     }
 
     private void updateModel(Implication implication) {
-        OWLSubClassOfAxiom a = implication.toAxiom(model);
-        model.getRootOntology().getOWLOntologyManager().addAxiom(model.getRootOntology(), a);
-        model.flush();
+        OWLSubClassOfAxiom a = implication.toAxiom(kb.getReasoner());
+        kb.getManager().addAxiom(kb.getTbox(), a);
+        kb.getReasoner().flush();
     }
 
     public void update(Implication implication) {
@@ -114,10 +114,10 @@ public class PartialContext {
     }
 
     public void updateContext() {
-        model.precomputeInferences(InferenceType.CLASS_ASSERTIONS, InferenceType.CLASS_HIERARCHY, InferenceType.OBJECT_PROPERTY_ASSERTIONS, InferenceType.OBJECT_PROPERTY_HIERARCHY);
+        kb.getReasoner().precomputeInferences(InferenceType.CLASS_ASSERTIONS, InferenceType.CLASS_HIERARCHY, InferenceType.OBJECT_PROPERTY_ASSERTIONS, InferenceType.OBJECT_PROPERTY_HIERARCHY);
         Map<OWLNamedIndividual, SubsetOfAttributes> p = new HashMap<>();
         Map<OWLNamedIndividual, SubsetOfAttributes> n = new HashMap<>();
-        Set<OWLNamedIndividual> individuals = model.getRootOntology().getIndividualsInSignature(true);
+        Set<OWLNamedIndividual> individuals = kb.getReasoner().getRootOntology().getIndividualsInSignature(true);
         for (OWLNamedIndividual i : individuals) {
             p.put(i, new SubsetOfAttributes(getAttributes()));
             n.put(i, new SubsetOfAttributes(getAttributes()));
@@ -127,14 +127,14 @@ public class PartialContext {
             fireProgressUpdate(x + 1);
             ClassAttribute attr = (ClassAttribute) getAttributes().get(x);
             Set<OWLNamedIndividual> instances;
-            instances = model.getInstances(attr.getOntClass(), false).getFlattened();
+            instances = kb.getReasoner().getInstances(attr.getOntClass(), false).getFlattened();
             for (OWLNamedIndividual i : instances) {
                 SubsetOfAttributes attrs = p.get(i);
                 if (attrs != null) {
                     attrs.add(x);
                 }
             }
-            instances = model.getInstances(attr.getComplement(), false).getFlattened();
+            instances = kb.getReasoner().getInstances(attr.getComplement(), false).getFlattened();
             for (OWLNamedIndividual i : instances) {
                 SubsetOfAttributes attrs = n.get(i);
                 if (attrs != null) {
@@ -144,7 +144,7 @@ public class PartialContext {
         }
         pods.clear();
         for (OWLNamedIndividual i : p.keySet()) {
-            POD pod = new POD(i, getAttributes(), model, p.get(i), n.get(i));
+            POD pod = new POD(i, getAttributes(), kb, p.get(i), n.get(i));
             addPOD(pod);
         }
         fireContextChanged(null);
@@ -172,7 +172,7 @@ public class PartialContext {
         }
     }
 
-    public OWLReasoner getModel() {
-        return model;
+    public KB getKB() {
+        return kb;
     }
 }

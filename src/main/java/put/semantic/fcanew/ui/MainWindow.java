@@ -73,6 +73,7 @@ import put.semantic.fcanew.Expert;
 import put.semantic.fcanew.Expert.Suggestion;
 import put.semantic.fcanew.FCA;
 import put.semantic.fcanew.Implication;
+import put.semantic.fcanew.KB;
 import put.semantic.fcanew.PartialContext;
 import put.semantic.fcanew.ProgressListener;
 import put.semantic.fcanew.SimpleSetOfAttributes;
@@ -99,34 +100,34 @@ public class MainWindow extends javax.swing.JFrame {
 
     private List<? extends Attribute> createAttributes() {
         DLSyntaxObjectRenderer r = new DLSyntaxObjectRenderer();
-        final OWLDataFactory f = model.getRootOntology().getOWLOntologyManager().getOWLDataFactory();
+        final OWLDataFactory f = kb.getManager().getOWLDataFactory();
         List<ClassAttribute> attributes = new ArrayList<>();
-        NodeSet<OWLClass> namedClasses = model.getSubClasses(model.getTopClassNode().getRepresentativeElement(), false);
+        NodeSet<OWLClass> namedClasses = kb.getReasoner().getSubClasses(kb.getReasoner().getTopClassNode().getRepresentativeElement(), false);
         for (Node<OWLClass> node : namedClasses) {
             OWLClassExpression clazz = node.getRepresentativeElement();
-            attributes.add(new ClassAttribute(clazz, model));
+            attributes.add(new ClassAttribute(clazz, kb.getReasoner()));
             clazz = clazz.getComplementNNF();
-            attributes.add(new ClassAttribute(clazz, model));
+            attributes.add(new ClassAttribute(clazz, kb.getReasoner()));
         }
-        Set<OWLObjectProperty> objectProperties = model.getRootOntology().getObjectPropertiesInSignature(true);
+        Set<OWLObjectProperty> objectProperties = kb.getMainOntology().getObjectPropertiesInSignature(true);
         for (OWLObjectProperty property : objectProperties) {
             OWLClassExpression clazz;
             clazz = f.getOWLObjectSomeValuesFrom(property, f.getOWLThing());
-            attributes.add(new ClassAttribute(clazz, model));
+            attributes.add(new ClassAttribute(clazz, kb.getReasoner()));
             clazz = clazz.getComplementNNF();
-            attributes.add(new ClassAttribute(clazz, model));
+            attributes.add(new ClassAttribute(clazz, kb.getReasoner()));
             clazz = f.getOWLObjectSomeValuesFrom(f.getOWLObjectInverseOf(property), f.getOWLThing());
-            attributes.add(new ClassAttribute(clazz, model));
+            attributes.add(new ClassAttribute(clazz, kb.getReasoner()));
             clazz = clazz.getComplementNNF();
-            attributes.add(new ClassAttribute(clazz, model));
+            attributes.add(new ClassAttribute(clazz, kb.getReasoner()));
         }
         Collections.sort(attributes, new Comparator<ClassAttribute>() {
             @Override
             public int compare(ClassAttribute a, ClassAttribute b) {
-                if (model.isEntailed(f.getOWLSubClassOfAxiom(a.getOntClass(), b.getOntClass()))) {
+                if (kb.getReasoner().isEntailed(f.getOWLSubClassOfAxiom(a.getOntClass(), b.getOntClass()))) {
                     return 1;
                 }
-                if (model.isEntailed(f.getOWLSubClassOfAxiom(b.getOntClass(), a.getOntClass()))) {
+                if (kb.getReasoner().isEntailed(f.getOWLSubClassOfAxiom(b.getOntClass(), a.getOntClass()))) {
                     return -1;
                 }
                 return a.getOntClass().compareTo(b.getOntClass());
@@ -186,7 +187,7 @@ public class MainWindow extends javax.swing.JFrame {
     };
 
     private MLExpert mlExpert;
-    private OWLReasoner model;
+    private KB kb;
     private MultiList<Attribute> attributes;
     private final CheckBoxListModel<FeatureCalculator> availableCalculatorsModel;
     private Downloader downloader;
@@ -1037,18 +1038,18 @@ public class MainWindow extends javax.swing.JFrame {
 
             @Override
             protected Object doInBackground() throws Exception {
-                OWLOntologyManager m = model.getRootOntology().getOWLOntologyManager();
+                OWLOntologyManager m = kb.getManager();
                 OWLDataFactory f = m.getOWLDataFactory();
                 OWLNamedIndividual ind = f.getOWLNamedIndividual(IRI.create(uri));
                 if (!mlExpert.getCurrentImplication().getPremises().isEmpty()) {
                     for (Attribute a : mlExpert.getCurrentImplication().getPremises()) {
-                        m.addAxiom(model.getRootOntology(), f.getOWLClassAssertionAxiom(((ClassAttribute) a).getOntClass(), ind));
+                        m.addAxiom(kb.getAbox(), f.getOWLClassAssertionAxiom(((ClassAttribute) a).getOntClass(), ind));
                     }
                 } else {
-                    m.addAxiom(model.getRootOntology(), f.getOWLClassAssertionAxiom(model.getTopClassNode().getRepresentativeElement(), ind));
+                    m.addAxiom(kb.getAbox(), f.getOWLClassAssertionAxiom(kb.getReasoner().getTopClassNode().getRepresentativeElement(), ind));
                 }
                 extendPartialContext(uri, getUsedAttributes());
-                model.flush();
+                kb.getReasoner().flush();
                 context.updateContext();
                 return null;
             }
@@ -1066,9 +1067,9 @@ public class MainWindow extends javax.swing.JFrame {
     }//GEN-LAST:event_addNewButtonActionPerformed
 
     private List<String> getPossibleLabels(OWLNamedIndividual ind) {
-        OWLAnnotationProperty rdfsLabel = model.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLAnnotationProperty(OWLRDFVocabulary.RDFS_LABEL.getIRI());
+        OWLAnnotationProperty rdfsLabel = kb.getManager().getOWLDataFactory().getOWLAnnotationProperty(OWLRDFVocabulary.RDFS_LABEL.getIRI());
         List<String> result = new ArrayList<>();
-        for (OWLAnnotation ann : ind.getAnnotations(model.getRootOntology(), rdfsLabel)) {
+        for (OWLAnnotation ann : ind.getAnnotations(kb.getReasoner().getRootOntology(), rdfsLabel)) {
             if (ann.getValue() instanceof OWLLiteral) {
                 OWLLiteral literal = (OWLLiteral) ann.getValue();
                 if (!literal.getLiteral().isEmpty()) {
@@ -1126,14 +1127,14 @@ public class MainWindow extends javax.swing.JFrame {
     }
 
     private void extendPartialContext(String uri, List<Attribute> attributes) {
-        OWLOntologyManager manager = model.getRootOntology().getOWLOntologyManager();
+        OWLOntologyManager manager = kb.getManager();
         OWLDataFactory factory = manager.getOWLDataFactory();
         OWLNamedIndividual ind = factory.getOWLNamedIndividual(IRI.create(uri));
         boolean[] matches = downloader.matches(uri, attributes.toArray(new Attribute[0]));
         for (int i = 0; i < matches.length; ++i) {
             if (matches[i]) {
                 ClassAttribute a = (ClassAttribute) attributes.get(i);
-                manager.addAxiom(model.getRootOntology(), factory.getOWLClassAssertionAxiom(a.getOntClass(), ind));
+                manager.addAxiom(kb.getAbox(), factory.getOWLClassAssertionAxiom(a.getOntClass(), ind));
             }
         }
     }
@@ -1150,7 +1151,7 @@ public class MainWindow extends javax.swing.JFrame {
             extendPartialContext(uri, attributes);
             progressListener.update(++n);
         }
-        model.flush();
+        kb.getReasoner().flush();
     }
 
     private void continueStart() {
@@ -1158,12 +1159,12 @@ public class MainWindow extends javax.swing.JFrame {
         if (forced.isEmpty()) {
             forced.addAll(getAttributes(1));
         }
-        context = new PartialContext(new SimpleSetOfAttributes(getUsedAttributes()), model);
+        context = new PartialContext(new SimpleSetOfAttributes(getUsedAttributes()), kb);
         context.addProgressListener(progressListener);
         context.updateContext();
         contextTable.setRowSorter(new TableRowSorter<>());
         contextTable.setModel(new ContextDataModel(context));
-        contextTable.setDefaultRenderer(Object.class, new PODCellRenderer(model));
+        contextTable.setDefaultRenderer(Object.class, new PODCellRenderer(kb.getReasoner()));
         Enumeration<TableColumn> e = contextTable.getColumnModel().getColumns();
         JComboBox comboBox = new JComboBox(new Object[]{"+", "-", " "});
         while (e.hasMoreElements()) {
@@ -1281,22 +1282,19 @@ public class MainWindow extends javax.swing.JFrame {
     }//GEN-LAST:event_removeFileActionPerformed
 
     private void generateAttributesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generateAttributesActionPerformed
-        OWLOntologyManager m = OWLManager.createOWLOntologyManager();
-        Set<OWLOntology> ontologies = new HashSet<>();
         try {
-            for (File f : ((FilesListModel) files.getModel()).getFiles()) {
-                ontologies.addAll(m.getImportsClosure(m.loadOntology(IRI.create(f))));
-            }
-            OWLOntology o = m.createOntology(IRI.generateDocumentIRI(), ontologies);
+            kb = new KB();
+            KB.Reasoner r;
             if (useHermit.isSelected()) {
-                model = new Reasoner.ReasonerFactory().createReasoner(o);
+                r = KB.Reasoner.HERMIT;
             } else if (usePellet.isSelected()) {
-                model = new PelletReasoner(o, BufferingMode.BUFFERING);
+                r = KB.Reasoner.PELLET;
             } else if (useJFact.isSelected()) {
-                model = new JFactFactory().createReasoner(o);
+                r = KB.Reasoner.JFACT;
             } else {
                 throw new RuntimeException("Impoosible, no reasoner is selected");
             }
+            kb.setup(((FilesListModel) files.getModel()).getFiles(), r);
         } catch (OWLOntologyCreationException ex) {
             throw new RuntimeException(ex);
         }
@@ -1354,7 +1352,7 @@ public class MainWindow extends javax.swing.JFrame {
         Iterator<String> i = uris.iterator();
         while (i.hasNext()) {
             IRI iri = IRI.create(i.next());
-            if (model.getRootOntology().containsIndividualInSignature(iri, true)) {
+            if (kb.getReasoner().getRootOntology().containsIndividualInSignature(iri, true)) {
                 i.remove();
             }
         }
@@ -1433,7 +1431,7 @@ public class MainWindow extends javax.swing.JFrame {
             FileOutputStream s = null;
             try {
                 s = new FileOutputStream(fileChooser.getSelectedFile());
-                model.getRootOntology().getOWLOntologyManager().saveOntology(model.getRootOntology(), s);
+                kb.getManager().saveOntology(kb.getTbox(), s);
             } catch (FileNotFoundException | OWLOntologyStorageException ex) {
                 JOptionPane.showMessageDialog(this, ex.toString());
                 Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);

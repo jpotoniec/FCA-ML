@@ -25,6 +25,7 @@ import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import put.semantic.fcanew.Attribute;
 import put.semantic.fcanew.Expert;
 import put.semantic.fcanew.Implication;
+import put.semantic.fcanew.KB;
 import put.semantic.fcanew.PartialContext;
 import put.semantic.fcanew.ml.Classifier;
 import put.semantic.fcanew.ml.features.FeatureCalculator;
@@ -178,17 +179,17 @@ public class MLExpert implements Expert {
         if (currentImplication.getConclusions().size() != 1) {
             return false;
         }
-        OWLReasoner model = context.getModel();
-        OWLOntologyManager m = model.getRootOntology().getOWLOntologyManager();
+        KB kb = context.getKB();
+        OWLOntologyManager m = kb.getManager();
         OWLDataFactory f = m.getOWLDataFactory();
         OWLNamedIndividual ind = f.getOWLNamedIndividual(IRI.create(generateURI()));
         if (!currentImplication.getPremises().isEmpty()) {
             for (Attribute a : currentImplication.getPremises()) {
-                m.addAxiom(model.getRootOntology(), f.getOWLClassAssertionAxiom(((ClassAttribute) a).getOntClass(), ind));
+                m.addAxiom(kb.getAbox(), f.getOWLClassAssertionAxiom(((ClassAttribute) a).getOntClass(), ind));
             }
         }
-        m.addAxiom(model.getRootOntology(), f.getOWLClassAssertionAxiom(((ClassAttribute) currentImplication.getConclusions().iterator().next()).getComplement(), ind));
-        model.flush();
+        m.addAxiom(kb.getAbox(), f.getOWLClassAssertionAxiom(((ClassAttribute) currentImplication.getConclusions().iterator().next()).getComplement(), ind));
+        kb.getReasoner().flush();
         context.updateContext();
         return true;
     }
@@ -231,7 +232,7 @@ public class MLExpert implements Expert {
         for (FeatureCalculator calc : calculators) {
             System.err.println(calc.getClass());
             List<String> names = calc.getNames();
-            List<? extends FeatureValue> values = calc.compute(impl, context.getModel(), context);
+            List<? extends FeatureValue> values = calc.compute(impl, context.getKB().getReasoner(), context);
             for (int i = 0; i < names.size(); ++i) {
                 result.put(names.get(i), ((NumericFeatureValue) values.get(i)).getValue());
             }
