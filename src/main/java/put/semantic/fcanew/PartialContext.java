@@ -103,7 +103,7 @@ public class PartialContext {
     }
 
     private void updateModel(Implication implication) {
-        OWLSubClassOfAxiom a = implication.toAxiom(kb.getReasoner());
+        OWLSubClassOfAxiom a = implication.toAxiom(kb.getReasoner().getRootOntology().getOWLOntologyManager().getOWLDataFactory());
         kb.getManager().addAxiom(kb.getTbox(), a);
         kb.getReasoner().flush();
     }

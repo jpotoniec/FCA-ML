@@ -63,6 +63,7 @@ import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.model.OWLOntologyStorageException;
+import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
 import org.semanticweb.owlapi.reasoner.BufferingMode;
 import org.semanticweb.owlapi.reasoner.Node;
 import org.semanticweb.owlapi.reasoner.NodeSet;
@@ -191,6 +192,7 @@ public class MainWindow extends javax.swing.JFrame {
     private MultiList<Attribute> attributes;
     private final CheckBoxListModel<FeatureCalculator> availableCalculatorsModel;
     private Downloader downloader;
+    private FCA fca;
 
     private void registerImplication(Implication i, double p, Expert.Decision d) {
         ((HistoryTableModel) history.getModel()).add(i, p, d);
@@ -1219,7 +1221,7 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
         learningExamplesTable.setModel(classifier.getExamplesTableModel());
-        final FCA fca = new FCA();
+        fca = new FCA();
         fca.setContext(context);
         fca.setExpert(mlExpert);
         new SwingWorker() {
@@ -1232,7 +1234,13 @@ public class MainWindow extends javax.swing.JFrame {
 
             @Override
             protected void done() {
-                implicationText.setText("Bye-bye");
+                try {
+                    get();
+                    implicationText.setText("Bye-bye");
+                } catch (InterruptedException | ExecutionException ex) {
+                    implicationText.setText(ex.getLocalizedMessage());
+                    Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         }.execute();
     }
@@ -1426,13 +1434,23 @@ public class MainWindow extends javax.swing.JFrame {
         PreferencesProvider.getInstance().setCredibilityTreshold((Integer) credibilityTreshold.getValue());
     }//GEN-LAST:event_credibilityTresholdStateChanged
 
+    private OWLOntology exportImplications() throws OWLOntologyCreationException {
+        OWLOntologyManager m = kb.getManager();
+        OWLOntology result = m.createOntology();
+        for (Implication i : fca.getImplications()) {
+            OWLSubClassOfAxiom a = i.toAxiom(m.getOWLDataFactory());
+            m.addAxiom(result, a);
+        }
+        return result;
+    }
+
     private void saveResultActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveResultActionPerformed
         if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             FileOutputStream s = null;
             try {
                 s = new FileOutputStream(fileChooser.getSelectedFile());
-                kb.getManager().saveOntology(kb.getTbox(), s);
-            } catch (FileNotFoundException | OWLOntologyStorageException ex) {
+                kb.getManager().saveOntology(exportImplications(), s);
+            } catch (FileNotFoundException | OWLOntologyStorageException | OWLOntologyCreationException ex) {
                 JOptionPane.showMessageDialog(this, ex.toString());
                 Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
             } finally {

@@ -31,7 +31,7 @@ public class ConsistencyCalculator extends SingleFeatureCalculator {
     @Override
     public FeatureValue computeSingle(Implication impl, OWLReasoner model, PartialContext context) {
         OWLOntologyManager manager = model.getRootOntology().getOWLOntologyManager();
-        OWLSubClassOfAxiom subclassAxiom = impl.toAxiom(model);
+        OWLSubClassOfAxiom subclassAxiom = impl.toAxiom(model.getRootOntology().getOWLOntologyManager().getOWLDataFactory());
         boolean result = true;
         if (!model.getRootOntology().containsAxiom(subclassAxiom, true)) {
             manager.addAxiom(model.getRootOntology(), subclassAxiom);

@@ -6,6 +6,7 @@
 package put.semantic.fcanew;
 
 import org.semanticweb.owlapi.model.OWLClassExpression;
+import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 
@@ -40,10 +41,10 @@ public class Implication {
         return premises.toString() + "->" + conclusions.toString();
     }
 
-    public OWLSubClassOfAxiom toAxiom(OWLReasoner model) {
-        OWLClassExpression subClass = this.getPremises().getClass(model);
-        OWLClassExpression superClass = this.getConclusions().getClass(model);
-        OWLSubClassOfAxiom a = model.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLSubClassOfAxiom(subClass, superClass);
+    public OWLSubClassOfAxiom toAxiom(OWLDataFactory factory) {
+        OWLClassExpression subClass = this.getPremises().getClass(factory);
+        OWLClassExpression superClass = this.getConclusions().getClass(factory);
+        OWLSubClassOfAxiom a = factory.getOWLSubClassOfAxiom(subClass, superClass);
         return a;
     }
 

@@ -55,8 +55,8 @@ public class RuleCalculator extends AbstractFeatureCalculator {
     public List<? extends NumericFeatureValue> compute(Implication impl, OWLReasoner model, PartialContext context) {
         this.model = model;
         this.size = model.getRootOntology().getIndividualsInSignature().size();
-        OWLClassExpression p = impl.getPremises().getClass(model);
-        OWLClassExpression c = impl.getConclusions().getClass(model);
+        OWLClassExpression p = impl.getPremises().getClass(model.getRootOntology().getOWLOntologyManager().getOWLDataFactory());
+        OWLClassExpression c = impl.getConclusions().getClass(model.getRootOntology().getOWLOntologyManager().getOWLDataFactory());
         OWLClassExpression pc = model.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLObjectIntersectionOf(p, c);
         OWLClassExpression pnc = model.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLObjectIntersectionOf(p, c.getObjectComplementOf());
         double z = support(c);

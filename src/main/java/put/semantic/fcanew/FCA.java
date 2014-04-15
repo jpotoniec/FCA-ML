@@ -7,6 +7,7 @@ package put.semantic.fcanew;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -130,5 +131,9 @@ public class FCA {
 
     protected void reject() {
 //        context.addPOD(counterexample);
+    }
+
+    public Set<Implication> getImplications() {
+        return Collections.unmodifiableSet(implications);
     }
 }

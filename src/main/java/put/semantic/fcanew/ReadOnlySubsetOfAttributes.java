@@ -10,6 +10,7 @@ import java.util.NavigableSet;
 import java.util.Objects;
 import java.util.Set;
 import org.semanticweb.owlapi.model.OWLClassExpression;
+import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import put.semantic.fcanew.ui.ClassAttribute;
 
@@ -107,15 +108,15 @@ public abstract class ReadOnlySubsetOfAttributes implements Iterable<Attribute> 
         return false;
     }
 
-    public OWLClassExpression getClass(OWLReasoner model) {
+    public OWLClassExpression getClass(OWLDataFactory factory) {
         if (isEmpty()) {
-            return model.getTopClassNode().getRepresentativeElement();
+            return factory.getOWLThing();
         } else {
             Set<OWLClassExpression> classes = new HashSet<>();
             for (Attribute a : this) {
                 classes.add(((ClassAttribute) a).getOntClass());
             }
-            return model.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLObjectIntersectionOf(classes);
+            return factory.getOWLObjectIntersectionOf(classes);
         }
     }
 

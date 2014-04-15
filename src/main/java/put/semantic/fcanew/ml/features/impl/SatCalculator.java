@@ -28,8 +28,8 @@ public class SatCalculator extends AbstractFeatureCalculator {
 
     @Override
     public List<? extends BooleanFeatureValue> compute(Implication impl, OWLReasoner model, PartialContext context) {
-        OWLClassExpression p = impl.getPremises().getClass(model);
-        OWLClassExpression c = impl.getConclusions().getClass(model);
+        OWLClassExpression p = impl.getPremises().getClass(model.getRootOntology().getOWLOntologyManager().getOWLDataFactory());
+        OWLClassExpression c = impl.getConclusions().getClass(model.getRootOntology().getOWLOntologyManager().getOWLDataFactory());
         OWLClassExpression pc = model.getRootOntology().getOWLOntologyManager().getOWLDataFactory().getOWLObjectIntersectionOf(p, c);
         return transform(model.isSatisfiable(pc),
                 model.isSatisfiable(p),

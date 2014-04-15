@@ -28,7 +28,7 @@ public class FollowingCalculators extends SingleFeatureCalculator {
 
     @Override
     public FeatureValue computeSingle(Implication impl, OWLReasoner model, PartialContext context) {
-        OWLSubClassOfAxiom subclassAxiom = impl.toAxiom(model);
+        OWLSubClassOfAxiom subclassAxiom = impl.toAxiom(model.getRootOntology().getOWLOntologyManager().getOWLDataFactory());
         return new BooleanFeatureValue(model.isEntailed(subclassAxiom));
     }
 
