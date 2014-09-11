@@ -15,6 +15,7 @@ import put.semantic.fcanew.ml.Classifier;
 import put.semantic.fcanew.ml.LinearRegression;
 import put.semantic.fcanew.ml.WekaClassifier;
 import weka.classifiers.functions.LibSVM;
+import weka.classifiers.functions.Logistic;
 import weka.classifiers.functions.MultilayerPerceptron;
 import weka.classifiers.meta.LogitBoost;
 import weka.classifiers.rules.JRip;
@@ -32,6 +33,7 @@ public class AvailableClassifiersModel implements ComboBoxModel<Classifier> {
         new WekaClassifier(new LibSVM()),
         new WekaClassifier(new Ridor()),
         new WekaClassifier(new LogitBoost()),
+        new WekaClassifier(new Logistic()),
         new WekaClassifier(new MultilayerPerceptron()),
         new WekaClassifier(new J48()),
         new LinearRegression()
