@@ -91,10 +91,7 @@ public class FCA {
         if (premises.containsAny(forced)) {
             result.add(kp);
         } else {
-            for (Attribute a : forced) {
-                SubsetOfAttributes x = new SubsetOfAttributes(all, Arrays.asList(a));
-                result.add(SubsetOfAttributes.intersectionOf(kp, context.K(x), forced));
-            }
+            result.add(SubsetOfAttributes.intersectionOf(kp, forced));
         }
         return result;
     }
