@@ -107,20 +107,30 @@ public class MainWindow extends javax.swing.JFrame {
         for (Node<OWLClass> node : namedClasses) {
             OWLClassExpression clazz = node.getRepresentativeElement();
             attributes.add(new ClassAttribute(clazz, kb.getReasoner()));
-            clazz = clazz.getComplementNNF();
-            attributes.add(new ClassAttribute(clazz, kb.getReasoner()));
+            if (generateNegation.isSelected()) {
+                clazz = clazz.getComplementNNF();
+                attributes.add(new ClassAttribute(clazz, kb.getReasoner()));
+            }
         }
         Set<OWLObjectProperty> objectProperties = kb.getMainOntology().getObjectPropertiesInSignature(true);
         for (OWLObjectProperty property : objectProperties) {
             OWLClassExpression clazz;
-            clazz = f.getOWLObjectSomeValuesFrom(property, f.getOWLThing());
-            attributes.add(new ClassAttribute(clazz, kb.getReasoner()));
-            clazz = clazz.getComplementNNF();
-            attributes.add(new ClassAttribute(clazz, kb.getReasoner()));
-            clazz = f.getOWLObjectSomeValuesFrom(f.getOWLObjectInverseOf(property), f.getOWLThing());
-            attributes.add(new ClassAttribute(clazz, kb.getReasoner()));
-            clazz = clazz.getComplementNNF();
-            attributes.add(new ClassAttribute(clazz, kb.getReasoner()));
+            if (generateDomain.isSelected()) {
+                clazz = f.getOWLObjectSomeValuesFrom(property, f.getOWLThing());
+                attributes.add(new ClassAttribute(clazz, kb.getReasoner()));
+                if (generateNegation.isSelected()) {
+                    clazz = clazz.getComplementNNF();
+                    attributes.add(new ClassAttribute(clazz, kb.getReasoner()));
+                }
+            }
+            if (generateRange.isSelected()) {
+                clazz = f.getOWLObjectSomeValuesFrom(f.getOWLObjectInverseOf(property), f.getOWLThing());
+                attributes.add(new ClassAttribute(clazz, kb.getReasoner()));
+                if (generateNegation.isSelected()) {
+                    clazz = clazz.getComplementNNF();
+                    attributes.add(new ClassAttribute(clazz, kb.getReasoner()));
+                }
+            }
         }
         Collections.sort(attributes, new Comparator<ClassAttribute>() {
             @Override
@@ -325,7 +335,11 @@ public class MainWindow extends javax.swing.JFrame {
         usedToForced = new javax.swing.JButton();
         forcedToUsed = new javax.swing.JButton();
         useAllMapped = new javax.swing.JButton();
+        jPanel7 = new javax.swing.JPanel();
         generateAttributes = new javax.swing.JButton();
+        generateNegation = new javax.swing.JCheckBox();
+        generateDomain = new javax.swing.JCheckBox();
+        generateRange = new javax.swing.JCheckBox();
         fcaTab = new javax.swing.JSplitPane();
         jSplitPane1 = new javax.swing.JSplitPane();
         jPanel1 = new javax.swing.JPanel();
@@ -447,7 +461,7 @@ public class MainWindow extends javax.swing.JFrame {
                 .addComponent(useJFact)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(useHermit)
-                .addContainerGap(97, Short.MAX_VALUE))
+                .addContainerGap(98, Short.MAX_VALUE))
         );
 
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Classifier"));
@@ -541,7 +555,7 @@ public class MainWindow extends javax.swing.JFrame {
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(classifierConfiguration, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(classifierHelp))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 16, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 15, Short.MAX_VALUE)
                 .addComponent(classifierConfigurationStatus)
                 .addGap(18, 18, 18)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -577,7 +591,7 @@ public class MainWindow extends javax.swing.JFrame {
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel5Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 103, Short.MAX_VALUE)
+                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 101, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -700,7 +714,7 @@ public class MainWindow extends javax.swing.JFrame {
                                         .addGap(18, 18, 18)
                                         .addComponent(forcedToUsed)
                                         .addGap(0, 0, Short.MAX_VALUE))
-                                    .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 529, Short.MAX_VALUE))))
+                                    .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 530, Short.MAX_VALUE))))
                         .addContainerGap())
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addGap(30, 30, 30)
@@ -712,12 +726,49 @@ public class MainWindow extends javax.swing.JFrame {
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
         );
 
+        jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder("Available attributes"));
+
         generateAttributes.setText("Generate attributes");
         generateAttributes.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 generateAttributesActionPerformed(evt);
             }
         });
+
+        generateNegation.setText("Negation");
+
+        generateDomain.setText("Domain");
+
+        generateRange.setText("Range");
+
+        javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
+        jPanel7.setLayout(jPanel7Layout);
+        jPanel7Layout.setHorizontalGroup(
+            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel7Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel7Layout.createSequentialGroup()
+                        .addComponent(generateNegation)
+                        .addGap(18, 18, 18)
+                        .addComponent(generateDomain)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(generateRange))
+                    .addComponent(generateAttributes))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        jPanel7Layout.setVerticalGroup(
+            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel7Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(generateNegation)
+                    .addComponent(generateDomain)
+                    .addComponent(generateRange))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 21, Short.MAX_VALUE)
+                .addComponent(generateAttributes)
+                .addContainerGap())
+        );
 
         javax.swing.GroupLayout setupTabLayout = new javax.swing.GroupLayout(setupTab);
         setupTab.setLayout(setupTabLayout);
@@ -737,10 +788,10 @@ public class MainWindow extends javax.swing.JFrame {
                         .addGap(12, 12, 12)
                         .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(jPanel2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, setupTabLayout.createSequentialGroup()
+                            .addGroup(setupTabLayout.createSequentialGroup()
                                 .addComponent(start)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(generateAttributes)))))
+                                .addGap(18, 18, 18)
+                                .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
                 .addContainerGap())
         );
         setupTabLayout.setVerticalGroup(
@@ -752,7 +803,9 @@ public class MainWindow extends javax.swing.JFrame {
                         .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addGroup(setupTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(generateAttributes)
+                            .addGroup(setupTabLayout.createSequentialGroup()
+                                .addGap(1, 1, 1)
+                                .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addComponent(start)))
                     .addGroup(setupTabLayout.createSequentialGroup()
                         .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1541,6 +1594,9 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JList forcedAttributes;
     private javax.swing.JButton forcedToUsed;
     private javax.swing.JButton generateAttributes;
+    private javax.swing.JCheckBox generateDomain;
+    private javax.swing.JCheckBox generateNegation;
+    private javax.swing.JCheckBox generateRange;
     private javax.swing.JTable history;
     private javax.swing.JSpinner ignoreTreshold;
     private javax.swing.JLabel implicationText;
@@ -1558,6 +1614,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
     private javax.swing.JPanel jPanel6;
+    private javax.swing.JPanel jPanel7;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane10;
     private javax.swing.JScrollPane jScrollPane11;
