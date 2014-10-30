@@ -13,6 +13,7 @@ import javax.swing.ComboBoxModel;
 import javax.swing.event.ListDataListener;
 import put.semantic.fcanew.ml.Classifier;
 import put.semantic.fcanew.ml.LinearRegression;
+import put.semantic.fcanew.ml.NotVeryHelpfulClassifier;
 import put.semantic.fcanew.ml.WekaClassifier;
 import weka.classifiers.functions.LibSVM;
 import weka.classifiers.functions.Logistic;
@@ -36,7 +37,8 @@ public class AvailableClassifiersModel implements ComboBoxModel<Classifier> {
         new WekaClassifier(new Logistic()),
         new WekaClassifier(new MultilayerPerceptron()),
         new WekaClassifier(new J48()),
-        new LinearRegression()
+        new LinearRegression(),
+        new NotVeryHelpfulClassifier()
     };
 
     private Classifier selected = data[0];
