@@ -1216,6 +1216,16 @@ public class MainWindow extends javax.swing.JFrame {
                 ((ContextDataModel) contextTable.getModel()).setCurrentImplication(i.getImplication());
                 justificationText.setText(justification);
                 implicationText.setText(String.format("<html>%s</html>", i.getImplication().toString()));
+                {
+                    Map<String, String> desc = i.getImplication().describe(kb);
+                    String s = "<html><table border=\"1\">";
+                    s += "<tr><th>Attribute</th><th>Label</th></tr>";
+                    for (Map.Entry<String, String> e : desc.entrySet()) {
+                        s += String.format("<tr><td>%s</td><td><pre>%s</pre></td></tr>", e.getKey(), e.getValue());
+                    }
+                    s += "</table></html>";
+                    implicationText.setToolTipText(s);
+                }
                 setButtonsEnabled(true);
                 featuresTable.setModel(getFeaturesTableModel(i.getFeatures()));
             }

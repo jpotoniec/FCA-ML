@@ -5,10 +5,17 @@
  */
 package put.semantic.fcanew;
 
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
+import org.semanticweb.owlapi.model.OWLAnnotation;
+import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
+import put.semantic.fcanew.ui.ClassAttribute;
 
 /**
  *
@@ -39,6 +46,17 @@ public class Implication {
     @Override
     public String toString() {
         return premises.toString() + "->" + conclusions.toString();
+    }
+
+    public Map<String, String> describe(KB kb) {
+        Map<String, String> result = new TreeMap<>();
+        for (Attribute a : this.getPremises()) {
+            result.put(a.toString(), ((ClassAttribute) a).describeS(kb));
+        }
+        for (Attribute a : this.getConclusions()) {
+            result.put(a.toString(), ((ClassAttribute) a).describeS(kb));
+        }
+        return result;
     }
 
     public OWLSubClassOfAxiom toAxiom(OWLDataFactory factory) {
