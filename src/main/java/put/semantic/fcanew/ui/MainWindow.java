@@ -9,7 +9,6 @@
  */
 package put.semantic.fcanew.ui;
 
-import com.clarkparsia.pellet.owlapiv3.PelletReasoner;
 import darrylbu.renderer.VerticalTableHeaderCellRenderer;
 import java.awt.Color;
 import java.awt.EventQueue;
@@ -24,14 +23,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
@@ -48,8 +44,6 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import org.apache.commons.lang.StringUtils;
-import org.semanticweb.HermiT.Reasoner;
-import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAnnotation;
 import org.semanticweb.owlapi.model.OWLAnnotationProperty;
@@ -64,10 +58,8 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
-import org.semanticweb.owlapi.reasoner.BufferingMode;
 import org.semanticweb.owlapi.reasoner.Node;
 import org.semanticweb.owlapi.reasoner.NodeSet;
-import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary;
 import put.semantic.fcanew.Attribute;
 import put.semantic.fcanew.Expert;
@@ -92,11 +84,13 @@ import put.semantic.fcanew.ml.features.impl.RuleCalculator;
 import put.semantic.fcanew.ml.features.impl.SatCalculator;
 import put.semantic.fcanew.preferences.PreferencesProvider;
 import put.semantic.fcanew.ui.MLExpert.MLExpertEventListener;
-import uk.ac.manchester.cs.jfact.JFactFactory;
 import uk.ac.manchester.cs.owlapi.dlsyntax.DLSyntaxObjectRenderer;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class MainWindow extends javax.swing.JFrame {
 
+    private final Logger logger = LogManager.getLogger(MainWindow.class);
     private PartialContext context;
 
     private List<? extends Attribute> createAttributes() {
@@ -106,10 +100,14 @@ public class MainWindow extends javax.swing.JFrame {
         NodeSet<OWLClass> namedClasses = kb.getReasoner().getSubClasses(kb.getReasoner().getTopClassNode().getRepresentativeElement(), false);
         for (Node<OWLClass> node : namedClasses) {
             OWLClassExpression clazz = node.getRepresentativeElement();
-            attributes.add(new ClassAttribute(clazz, kb.getReasoner()));
+            ClassAttribute attr = new ClassAttribute(clazz, kb.getReasoner());
+            attributes.add(attr);
+            logger.trace("AVAIL_PLAIN: {} {}", attr, node.getRepresentativeElement().getIRI());
             if (generateNegation.isSelected()) {
                 clazz = clazz.getComplementNNF();
-                attributes.add(new ClassAttribute(clazz, kb.getReasoner()));
+                attr = new ClassAttribute(clazz, kb.getReasoner());
+                attributes.add(attr);
+                logger.trace("AVAIL_NEG: {} {}", attr, node.getRepresentativeElement().getIRI());
             }
         }
         Set<OWLObjectProperty> objectProperties = kb.getMainOntology().getObjectPropertiesInSignature(true);
@@ -117,18 +115,26 @@ public class MainWindow extends javax.swing.JFrame {
             OWLClassExpression clazz;
             if (generateDomain.isSelected()) {
                 clazz = f.getOWLObjectSomeValuesFrom(property, f.getOWLThing());
-                attributes.add(new ClassAttribute(clazz, kb.getReasoner()));
+                ClassAttribute attr = new ClassAttribute(clazz, kb.getReasoner());
+                attributes.add(attr);
+                logger.trace("AVAIL_DOMAIN: {} {}", attr, property.getIRI());
                 if (generateNegation.isSelected()) {
                     clazz = clazz.getComplementNNF();
-                    attributes.add(new ClassAttribute(clazz, kb.getReasoner()));
+                    attr = new ClassAttribute(clazz, kb.getReasoner());
+                    attributes.add(attr);
+                    logger.trace("AVAIL_NEG_DOMAIN: {} {}", attr, property.getIRI());
                 }
             }
             if (generateRange.isSelected()) {
                 clazz = f.getOWLObjectSomeValuesFrom(f.getOWLObjectInverseOf(property), f.getOWLThing());
-                attributes.add(new ClassAttribute(clazz, kb.getReasoner()));
+                ClassAttribute attr = new ClassAttribute(clazz, kb.getReasoner());
+                attributes.add(attr);
+                logger.trace("AVAIL_RANGE: {} {}", attr, property.getIRI());
                 if (generateNegation.isSelected()) {
                     clazz = clazz.getComplementNNF();
-                    attributes.add(new ClassAttribute(clazz, kb.getReasoner()));
+                    attr = new ClassAttribute(clazz, kb.getReasoner());
+                    attributes.add(attr);
+                    logger.trace("AVAIL_NEG_RANGE: {} {}", attr, property.getIRI());
                 }
             }
         }
@@ -220,6 +226,8 @@ public class MainWindow extends javax.swing.JFrame {
      * Creates new form MainWindow
      */
     public MainWindow() {
+        logger.entry();
+        logger.trace("INIT");
         availableCalculatorsModel = new CheckBoxListModel<>(Arrays.asList(
                 new RuleCalculator(),
                 new FollowingCalculators(),
@@ -1214,6 +1222,10 @@ public class MainWindow extends javax.swing.JFrame {
         if (forced.isEmpty()) {
             forced.addAll(getAttributes(1));
         }
+        logger.trace("START");
+        for (Attribute a : getUsedAttributes()) {
+            logger.trace("ATTR: {}", a);
+        }
         context = new PartialContext(new SimpleSetOfAttributes(getUsedAttributes()), kb);
         context.addProgressListener(progressListener);
         context.updateContext();
@@ -1243,6 +1255,7 @@ public class MainWindow extends javax.swing.JFrame {
 
             @Override
             public void implicationAccepted(ImplicationDescription i, boolean autoDecision) {
+                logger.trace("ACCEPT");
                 setButtonsEnabled(false);
                 ((ConfusionMatrix) confusionMatrix.getModel()).add(i.getSuggestion(), Expert.Decision.ACCEPT);
                 registerImplication(i.getImplication(), i.getClassificationOutcome(), Expert.Decision.ACCEPT);
@@ -1250,6 +1263,7 @@ public class MainWindow extends javax.swing.JFrame {
 
             @Override
             public void implicationRejected(ImplicationDescription i, boolean autoDecision) {
+                logger.trace("REJECT");
                 setButtonsEnabled(false);
                 ((ConfusionMatrix) confusionMatrix.getModel()).add(i.getSuggestion(), Expert.Decision.REJECT);
                 registerImplication(i.getImplication(), i.getClassificationOutcome(), Expert.Decision.REJECT);
@@ -1265,6 +1279,7 @@ public class MainWindow extends javax.swing.JFrame {
 
             @Override
             public void ask(ImplicationDescription i, String justification) {
+                logger.trace("ASK: {}", i.getImplication());
                 highlightButton(i.getSuggestion());
                 ((ContextDataModel) contextTable.getModel()).setCurrentImplication(i.getImplication());
                 justificationText.setText(justification);
@@ -1299,10 +1314,11 @@ public class MainWindow extends javax.swing.JFrame {
             protected void done() {
                 try {
                     get();
+                    logger.trace("FINISHED");
                     implicationText.setText("Bye-bye");
                 } catch (InterruptedException | ExecutionException ex) {
                     implicationText.setText(ex.getLocalizedMessage());
-                    Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+                    ex.printStackTrace();
                 }
             }
         }.execute();
@@ -1366,6 +1382,9 @@ public class MainWindow extends javax.swing.JFrame {
                 throw new RuntimeException("Impoosible, no reasoner is selected");
             }
             kb.setup(((FilesListModel) files.getModel()).getFiles(), r);
+            for (File f : ((FilesListModel) files.getModel()).getFiles()) {
+                logger.trace("LOAD: {}", f.getAbsolutePath());
+            }
         } catch (OWLOntologyCreationException ex) {
             throw new RuntimeException(ex);
         }
@@ -1452,7 +1471,7 @@ public class MainWindow extends javax.swing.JFrame {
                     addNew((String) result);
                 } catch (InterruptedException | ExecutionException ex) {
                     //should never happen
-                    Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+                    ex.printStackTrace();
                 }
             }
 
@@ -1515,14 +1534,14 @@ public class MainWindow extends javax.swing.JFrame {
                 kb.getManager().saveOntology(exportImplications(), s);
             } catch (FileNotFoundException | OWLOntologyStorageException | OWLOntologyCreationException ex) {
                 JOptionPane.showMessageDialog(this, ex.toString());
-                Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+                ex.printStackTrace();
             } finally {
                 try {
                     if (s != null) {
                         s.close();
                     }
                 } catch (IOException ex) {
-                    Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+                    ex.printStackTrace();
                 }
             }
         }
