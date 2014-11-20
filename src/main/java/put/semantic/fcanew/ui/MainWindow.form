@@ -851,8 +851,10 @@
                                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                                       <Component id="rejectButton" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                                      <Component id="updateProgressBar" min="-2" pref="415" max="-2" attributes="0"/>
-                                      <EmptySpace type="unrelated" max="32767" attributes="0"/>
+                                      <Component id="disjointButton" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                                      <Component id="updateProgressBar" min="-2" pref="309" max="-2" attributes="0"/>
+                                      <EmptySpace pref="18" max="32767" attributes="0"/>
                                       <Component id="addNewButton" min="-2" max="-2" attributes="0"/>
                                   </Group>
                                   <Group type="102" alignment="1" attributes="0">
@@ -878,6 +880,7 @@
                                   <Group type="103" groupAlignment="3" attributes="0">
                                       <Component id="acceptButton" alignment="3" min="-2" max="-2" attributes="0"/>
                                       <Component id="rejectButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="disjointButton" alignment="3" min="-2" max="-2" attributes="0"/>
                                   </Group>
                                   <Component id="updateProgressBar" min="-2" max="-2" attributes="0"/>
                                   <Component id="addNewButton" min="-2" max="-2" attributes="0"/>
@@ -987,6 +990,15 @@
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="saveResultActionPerformed"/>
+                      </Events>
+                    </Component>
+                    <Component class="javax.swing.JButton" name="disjointButton">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Disjoint"/>
+                        <Property name="toolTipText" type="java.lang.String" value="It is not possible for an object to belong to all classes on the left-hand side of the implication."/>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="disjointButtonActionPerformed"/>
                       </Events>
                     </Component>
                   </SubComponents>

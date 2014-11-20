@@ -364,6 +364,7 @@ public class MainWindow extends javax.swing.JFrame {
         jScrollPane4 = new javax.swing.JScrollPane();
         justificationText = new javax.swing.JLabel();
         saveResult = new javax.swing.JButton();
+        disjointButton = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         featuresTable = new javax.swing.JTable();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -895,6 +896,14 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
 
+        disjointButton.setText("Disjoint");
+        disjointButton.setToolTipText("It is not possible for an object to belong to all classes on the left-hand side of the implication.");
+        disjointButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                disjointButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -916,8 +925,10 @@ public class MainWindow extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(rejectButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(updateProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, 415, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(disjointButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(updateProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, 309, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 18, Short.MAX_VALUE)
                         .addComponent(addNewButton))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                         .addComponent(jScrollPane4)
@@ -936,7 +947,8 @@ public class MainWindow extends javax.swing.JFrame {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(acceptButton)
-                        .addComponent(rejectButton))
+                        .addComponent(rejectButton)
+                        .addComponent(disjointButton))
                     .addComponent(updateProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(addNewButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -1556,6 +1568,11 @@ public class MainWindow extends javax.swing.JFrame {
         PreferencesProvider.getInstance().setRejectedWeight((double) rejectedWeight.getValue());
     }//GEN-LAST:event_rejectedWeightStateChanged
 
+    private void disjointButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_disjointButtonActionPerformed
+        logger.trace("DISJOINT");
+        mlExpert.accept();
+    }//GEN-LAST:event_disjointButtonActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -1605,6 +1622,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JTable confusionMatrix;
     private javax.swing.JTable contextTable;
     private javax.swing.JSpinner credibilityTreshold;
+    private javax.swing.JButton disjointButton;
     private javax.swing.JButton downloadSomething;
     private javax.swing.JSplitPane fcaTab;
     private javax.swing.JTable featuresTable;
