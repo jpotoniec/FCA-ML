@@ -18,6 +18,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -28,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
 import java.util.regex.Pattern;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
@@ -44,6 +47,8 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import org.apache.commons.lang.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAnnotation;
 import org.semanticweb.owlapi.model.OWLAnnotationProperty;
@@ -83,10 +88,10 @@ import put.semantic.fcanew.ml.features.impl.ImplicationShapeCalculator;
 import put.semantic.fcanew.ml.features.impl.RuleCalculator;
 import put.semantic.fcanew.ml.features.impl.SatCalculator;
 import put.semantic.fcanew.preferences.PreferencesProvider;
+import put.semantic.fcanew.script.HandcraftedScript;
+import put.semantic.fcanew.script.Script;
 import put.semantic.fcanew.ui.MLExpert.MLExpertEventListener;
 import uk.ac.manchester.cs.owlapi.dlsyntax.DLSyntaxObjectRenderer;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 
 public class MainWindow extends javax.swing.JFrame {
 
@@ -209,6 +214,7 @@ public class MainWindow extends javax.swing.JFrame {
     private final CheckBoxListModel<FeatureCalculator> availableCalculatorsModel;
     private Downloader downloader;
     private FCA fca;
+    private final Script script = new HandcraftedScript();
 
     private void registerImplication(Implication i, double p, Expert.Decision d) {
         ((HistoryTableModel) history.getModel()).add(i, p, d);
@@ -228,6 +234,11 @@ public class MainWindow extends javax.swing.JFrame {
     public MainWindow() {
         logger.entry();
         logger.trace("INIT");
+        try {
+            logger.debug("HOST: " + InetAddress.getLocalHost().getCanonicalHostName());
+            logger.debug("IP: " + InetAddress.getLocalHost().getHostAddress());
+        } catch (UnknownHostException ex) {
+        }
         availableCalculatorsModel = new CheckBoxListModel<>(Arrays.asList(
                 new RuleCalculator(),
                 new FollowingCalculators(),
@@ -288,6 +299,34 @@ public class MainWindow extends javax.swing.JFrame {
         credibilityTreshold.setValue(PreferencesProvider.getInstance().getCredibilityTreshold());
         rejectedWeight.setValue(PreferencesProvider.getInstance().getRejectedWeight());
         CSVExporter.addToAllTables(this);
+        if (script != null) {
+            runScript();
+        }
+    }
+
+    private void runScript() {
+        ((FilesListModel) files.getModel()).clear();
+        ((FilesListModel) files.getModel()).add(script.getOntologies().toArray(new File[0]));
+        generateNegation.setSelected(script.getGenerateNegation());
+        generateDomain.setSelected(script.getGenerateDomain());
+        generateRange.setSelected(script.getGenerateRange());
+        generateAttributes.doClick();
+        for (int i = 0; i < unusedAttributes.getModel().getSize(); i++) {
+            Attribute a = (Attribute) unusedAttributes.getModel().getElementAt(i);
+            if (script.getAttributes().contains(a.toString())) {
+                unusedAttributes.getSelectionModel().addSelectionInterval(i, i);
+            }
+        }
+        unusedToUsed.doClick();
+        classifierToUse.setSelectedIndex(script.getClassifier());
+        if (script.shouldLockLOD()) {
+            jTabbedPane1.setEnabledAt(jTabbedPane1.indexOfComponent(mappingsPanel1), false);
+            downloadSomething.setEnabled(false);
+        }
+        availableCalculatorsModel.setChecked(script.getCalculators());
+        if (script.shouldRun()) {
+            start.doClick();
+        }
     }
 
     /**
@@ -1327,6 +1366,9 @@ public class MainWindow extends javax.swing.JFrame {
                 try {
                     get();
                     logger.trace("FINISHED");
+                    if (script != null) {
+                        script.submitLog(new File("fca.log"));
+                    }
                     implicationText.setText("Bye-bye");
                 } catch (InterruptedException | ExecutionException ex) {
                     implicationText.setText(ex.getLocalizedMessage());

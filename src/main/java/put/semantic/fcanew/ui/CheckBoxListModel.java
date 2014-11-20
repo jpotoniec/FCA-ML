@@ -56,6 +56,16 @@ public class CheckBoxListModel<T> implements ListModel<T> {
         return checked[index];
     }
 
+    public void setChecked(int[] indices) {
+        for (int i = 0; i < checked.length; ++i) {
+            checked[i] = false;
+        }
+        for (int i : indices) {
+            checked[i] = true;
+        }
+        fireContentsChanged(0, checked.length - 1);
+    }
+
     public void setChecked(int index, boolean value) {
         if (checked[index] != value) {
             checked[index] = value;

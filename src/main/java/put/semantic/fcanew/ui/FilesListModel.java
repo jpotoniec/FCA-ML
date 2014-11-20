@@ -85,6 +85,16 @@ public class FilesListModel implements ListModel<File> {
         }
     }
 
+    public void clear() {
+        if (!data.isEmpty()) {
+            ListDataEvent e = new ListDataEvent(this, ListDataEvent.INTERVAL_REMOVED, 0, data.size() - 1);
+            data.clear();
+            for (ListDataListener l : listeners) {
+                l.intervalRemoved(e);
+            }
+        }
+    }
+
     @Override
     public int getSize() {
         return data.size();
