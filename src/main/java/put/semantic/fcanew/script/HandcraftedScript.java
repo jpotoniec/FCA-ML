@@ -102,7 +102,7 @@ public class HandcraftedScript implements Script {
     @Override
     public void submitLog(File logfile) {
         try {
-            HttpPost post = new HttpPost("http://semantic.cs.put.poznan.pl/~smaug/fca/submit.php");
+            HttpPost post = new HttpPost("http://semantic.cs.put.poznan.pl/fca/submit.php");
             HttpEntity entity = MultipartEntityBuilder.create()
                     .addBinaryBody("file", logfile)
                     .build();
