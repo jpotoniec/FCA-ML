@@ -1367,6 +1367,10 @@ public class MainWindow extends javax.swing.JFrame {
                     get();
                     logger.trace("FINISHED");
                     if (script != null) {
+                        String name = JOptionPane.showInputDialog(MainWindow.this, "Jeżeli chcesz otrzymać punkty z TSiSS, podaj swoje imię, nazwisko i nr indeksu", "TSiSS", JOptionPane.QUESTION_MESSAGE);
+                        if (name != null) {
+                            logger.trace("NAME: {}", name);
+                        }
                         script.submitLog(new File("fca.log"));
                     }
                     implicationText.setText("Bye-bye");
